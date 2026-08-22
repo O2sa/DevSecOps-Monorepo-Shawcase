@@ -17,6 +17,7 @@ The **Orders Service** manages product catalog data and the lifecycle of custome
 - **Order Isolation**: Ensure users can only retrieve orders matching their own authenticated user ID.
 - **Admin Order Management**: Provide administrator-only endpoints to inspect all orders and transition statuses (`PENDING` &rarr; `PROCESSING` &rarr; `COMPLETED`).
 - **Stateless Identity Integration**: Verify HMAC-SHA256 JWT tokens issued by the Django Identity Service.
+- **CORS Support**: Centralized cross-origin request handling for the Web Portal frontend (`http://localhost:3000`).
 
 ---
 
@@ -65,7 +66,18 @@ The **Orders Service** manages product catalog data and the lifecycle of custome
 
 ---
 
-## 🔗 5. Relationship with the Identity Service
+## ⚙️ 5. Configuration & Environment Variables
+
+| Variable / Property | Default | Description |
+|---|---|---|
+| `SERVER_PORT` / `server.port` | `8002` | HTTP bind port |
+| `DJANGO_SECRET_KEY` / `orders.jwt.secret` | *(scaffold key)* | Shared HMAC-SHA256 JWT secret key |
+| `NOTIFICATION_SERVICE_URL` | `http://localhost:8003` | Target URL for dispatching order notifications |
+| `CORS_ALLOWED_ORIGINS` / `cors.allowed-origins` | `http://localhost:3000,http://127.0.0.1:3000` | Allowed origins for cross-origin browser requests |
+
+---
+
+## 🔗 6. Relationship with the Identity Service
 
 The Orders Service does **not** store or manage user accounts, passwords, or authentication credentials.
 
@@ -77,7 +89,7 @@ Instead:
 
 ---
 
-## 🔐 6. JWT Authentication & Role Mapping
+## 🔐 7. JWT Authentication & Role Mapping
 
 - **Signing Algorithm**: `HS256` (HMAC-SHA256).
 - **Signing Secret**: Configured via `orders.jwt.secret` (environment variable `DJANGO_SECRET_KEY`).
@@ -88,7 +100,7 @@ Instead:
 
 ---
 
-## 🗄️ 7. Database Model
+## 🗄️ 8. Database Model
 
 ### Product Entity (`products` table)
 - `id` (`Long`, Primary Key)
@@ -106,7 +118,7 @@ Instead:
 
 ---
 
-## 📦 8. Demo Data
+## 📦 9. Demo Data
 
 Upon application startup, `DataInitializer` automatically populates the product catalog with 3 demo products:
 
@@ -118,7 +130,7 @@ Upon application startup, `DataInitializer` automatically populates the product 
 
 ---
 
-## 🚀 9. How to Run Locally
+## 🚀 10. How to Run Locally
 
 ### Prerequisites
 - Java 21 JDK installed (`JAVA_HOME` configured).
@@ -137,7 +149,7 @@ The service will be available at [http://localhost:8002](http://localhost:8002).
 
 ---
 
-## 🧪 10. How to Run Tests
+## 🧪 11. How to Run Tests
 
 Run the full automated test suite:
 
@@ -153,7 +165,7 @@ cd apps/orders-service
 
 ---
 
-## 📖 11. API Endpoint Documentation
+## 📖 12. API Endpoint Documentation
 
 | Method | Endpoint | Authentication | Required Role | Status Code | Description |
 |---|---|---|---|---|---|
@@ -167,7 +179,7 @@ cd apps/orders-service
 
 ---
 
-## 💡 12. Example Requests & Responses
+## 💡 13. Example Requests & Responses
 
 ### 1. List Products (`GET /api/products`)
 ```bash
@@ -313,8 +325,7 @@ curl http://localhost:8002/health
 
 ---
 
-## 🔮 13. Current Limitations & Future Improvements
+## 🔮 14. Current Limitations & Future Improvements
 
-- **Asynchronous Event Emitting**: Emitting order lifecycle events (`ORDER_CREATED`, `ORDER_STATUS_CHANGED`) to the Express Notification Service will be wired in Phase 2.
 - **Asymmetric Key Cryptography (RS256 / JWKS)**: Future security hardening can evolve the shared HMAC secret into an asymmetric public/private key or JWKS endpoint hosted by the Identity Service.
 - **Production PostgreSQL Migration**: Database configuration is decoupled and ready for managed PostgreSQL migration via environment variables.

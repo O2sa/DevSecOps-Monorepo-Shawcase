@@ -1,13 +1,13 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '../../lib/auth/use-auth';
 import { Alert } from '../../components/Alert';
 import { ApiError } from '../../lib/api/client';
 
-export default function LoginPage() {
+function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { login, isAuthenticated } = useAuth();
@@ -18,8 +18,8 @@ export default function LoginPage() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [infoMessage, setInfoMessage] = useState<string | null>(null);
 
-  const redirectUrl = searchParams.get('redirect') || '/products';
-  const isRegistered = searchParams.get('registered') === 'true';
+  const redirectUrl = searchParams ? searchParams.get('redirect') || '/products' : '/products';
+  const isRegistered = searchParams ? searchParams.get('registered') === 'true' : false;
 
   useEffect(() => {
     if (isRegistered) {
@@ -124,12 +124,27 @@ export default function LoginPage() {
         </form>
 
         <div style={{ marginTop: '1.5rem', textAlign: 'center', fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
-          Don't have an account?{' '}
+          Don&apos;t have an account?{' '}
           <Link href="/register" style={{ color: 'var(--accent-cyan)', fontWeight: 600, textDecoration: 'none' }}>
             Register here &rarr;
           </Link>
         </div>
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="loading-state">
+          <div className="spinner"></div>
+          <p>Loading sign in form...</p>
+        </div>
+      }
+    >
+      <LoginForm />
+    </Suspense>
   );
 }

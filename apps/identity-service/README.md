@@ -47,6 +47,7 @@ The **Identity Service** is the central authentication and authorization authori
   - `Django>=5.0,<5.2`
   - `djangorestframework>=3.15.0,<3.16.0`
   - `djangorestframework-simplejwt>=5.3.0,<5.4.0`
+  - `django-cors-headers>=4.3.0,<4.8.0`
   - `gunicorn>=22.0.0,<24.0.0`
 
 ---
@@ -64,6 +65,7 @@ cp .env.example .env
 | `DJANGO_SECRET_KEY` | *(dev fallback)* | **Yes (Fails fast if missing)** | Cryptographic key for session & token signing |
 | `DJANGO_DEBUG` | `True` | No (Defaults to `True` for local dev) | Enable/disable debug mode (`False` in production) |
 | `DJANGO_ALLOWED_HOSTS` | `localhost,127.0.0.1,identity-service,0.0.0.0` | No | Comma-delimited list of valid host headers |
+| `CORS_ALLOWED_ORIGINS` | `http://localhost:3000,http://127.0.0.1:3000` | No | Allowed frontend origins for CORS |
 | `PORT` | `8001` | No | Service bind port |
 | `JWT_ACCESS_TOKEN_LIFETIME_MINUTES` | `60` | No | JWT access token validity duration |
 | `JWT_REFRESH_TOKEN_LIFETIME_DAYS` | `7` | No | JWT refresh token validity duration |

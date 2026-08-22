@@ -1,6 +1,7 @@
 import express, { Express, Request, Response } from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
+import { environment } from './config/environment';
 import { internalRoutes } from './internal/internal.routes';
 import { notificationRoutes } from './notification/notification.routes';
 import { errorHandler } from './common/middleware/error-handler.middleware';
@@ -11,7 +12,21 @@ export function createApp(): Express {
 
   // Security & body parsing middleware
   app.use(helmet());
-  app.use(cors());
+  app.use(
+    cors({
+      origin: (origin, callback) => {
+        // Allow requests with no origin (e.g. server-to-server or curl)
+        if (!origin) return callback(null, true);
+        if (environment.allowedOrigins.includes(origin)) {
+          return callback(null, true);
+        }
+        return callback(null, false);
+      },
+      credentials: true,
+      methods: ['GET', 'POST', 'PATCH', 'PUT', 'DELETE', 'OPTIONS'],
+      allowedHeaders: ['Authorization', 'Content-Type', 'Accept', 'Origin', 'X-Requested-With'],
+    })
+  );
   app.use(express.json());
 
   // Public Health Checks
