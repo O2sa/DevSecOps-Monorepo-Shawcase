@@ -3,13 +3,17 @@
 This document outlines the high-level architecture, user flows, and communication patterns of the **DevSecOps Proof-of-Concept Monorepo**.
 
 > [!NOTE]
-> **Implementation Status**: This document illustrates the intended architecture for the complete platform. Currently in Phase 1, the **Identity Service** has active business and auth APIs, while the remaining services and frontends are scaffolded with operational health endpoints. Service-to-service communication will be progressively wired in Phase 2.
+> **Implementation Status**:
+> - **Identity Service (Django)**: Core identity, registration, login, and JWT token issuance are implemented.
+> - **Orders Service (Spring Boot)**: Product catalog, order creation, user order isolation, admin order status transitions, and JWT validation are implemented.
+> - **Notification Service (Express + TypeScript)**: Internal event ingestion (`POST /internal/notifications`), user notification retrieval, and read state tracking are implemented.
+> - **Service-to-Service Integration**: Orders Service synchronously dispatches order creation events to Notification Service via HTTP `POST /internal/notifications`.
 
 ---
 
 ## 🏛️ System Architecture
 
-The intended communication model consists of direct, decoupled interactions from client frontends to specialized microservices, rather than a monolithic sequential chain:
+The architecture connects client frontends directly to domain backend services, with synchronous service-to-service communication established between Orders and Notifications:
 
 ```mermaid
 flowchart TD
@@ -27,22 +31,23 @@ flowchart TD
     %% Public user flows
     Web -->|"1. Authenticate & Token Introspection"| Identity
     Web -->|"2. Browse Catalog & Submit Orders"| Orders
+    Web -.->|"3. View User Notifications"| Notify
 
     %% Admin user flows
     Dashboard -->|"1. User & RBAC Management"| Identity
     Dashboard -->|"2. Order & Inventory Management"| Orders
-    Dashboard -->|"3. Notification Log Viewing"| Notify
+    Dashboard -.->|"3. Notification Log Viewing"| Notify
 
-    %% Asynchronous backend events
-    Orders -->|"3. Asynchronous Order Events"| Notify
-    Identity -.->|"Security Alerts"| Notify
+    %% Service-to-service communication
+    Orders -->|"3. Synchronous HTTP Order Events (/internal/notifications)"| Notify
+    Identity -.->|"Future: Security Alerts"| Notify
 ```
 
 ---
 
-## 👥 Intended Future User Interaction Flows
+## 👥 User & Service Interaction Flows
 
-### 1. Public User Flow
+### 1. Public Order & Notification Flow
 ```
                 Next.js (Public Web)
                    │
@@ -51,13 +56,17 @@ flowchart TD
 Identity Service      Orders Service
    (Django)            (Spring Boot)
                            │
+                           │ Synchronous HTTP
+                           │ (POST /internal/notifications)
                            ▼
                   Notification Service
-                       (Express)
+                  (Express + TypeScript)
 ```
-- **Next.js &rarr; Identity Service**: User registration, login, JWT token issuance, and account profile retrieval.
-- **Next.js &rarr; Orders Service**: Product catalog browsing and order placement using bearer JWT.
-- **Orders Service &rarr; Notification Service**: Emits asynchronous order confirmation events for email/alert delivery.
+1. **Authentication**: User logs in at the Django Identity Service and receives an HMAC-SHA256 JWT containing claims (`user_id`, `role`, etc.).
+2. **Order Placement**: User calls `POST /api/orders` on the Orders Service with the Bearer JWT.
+3. **Internal Notification Dispatch**: The Orders Service creates the order in its database and dispatches a synchronous HTTP request to `POST /internal/notifications` on the Notification Service (`userId`, `type="ORDER_CREATED"`, title, message).
+4. **Resilient Failure Handling**: If the Notification Service is temporarily unreachable, the Orders Service logs the error and returns `201 Created` without failing or rolling back the customer order.
+5. **Notification Retrieval**: The user calls `GET /api/notifications` or `GET /api/notifications/unread` on the Notification Service with their JWT to view notifications.
 
 ---
 
@@ -71,19 +80,18 @@ Identity Service      Orders Service
        (Django)       (Spring Boot)        (Express)
 ```
 - **Angular Dashboard &rarr; Identity Service**: User administration, role assignments (`admin` vs `user`), and security audit inspection.
-- **Angular Dashboard &rarr; Orders Service**: Order lifecycle updates, catalog curation, and inventory adjustments.
-- **Angular Dashboard &rarr; Notification Service**: System-wide announcement broadcasting and notification audit log inspection.
+- **Angular Dashboard &rarr; Orders Service**: System-wide order querying (`GET /api/orders`) and status updates (`PATCH /api/orders/{id}/status`).
+- **Angular Dashboard &rarr; Notification Service**: Notification audit inspection and status monitoring.
 
 ---
 
-## 🔌 Communication Protocols & Interfaces
+## 🔌 Communication Protocols & Implementation Status
 
-| From | To | Protocol / Format | Future Responsibility | Current Phase Status |
+| From | To | Protocol / Format | Responsibility | Current Implementation Status |
 |---|---|---|---|---|
-| Next.js | Identity Service | HTTPS / REST (JSON) | Login, Register, Session introspection (`/api/auth/*`, `/api/users/me`) | Implemented (Identity Service) |
-| Next.js | Orders Service | HTTPS / REST (JSON) | Product catalog queries, Order placement | Scaffolded (Phase 1) |
-| Angular | Identity Service | HTTPS / REST (JSON) | User management, Role assignment (`/api/users`) | Implemented (Identity Service) |
-| Angular | Orders Service | HTTPS / REST (JSON) | Order lifecycle management, Catalog updates | Scaffolded (Phase 1) |
-| Angular | Notification Service | HTTPS / REST (JSON) | System announcements & alert history | Scaffolded (Phase 1) |
-| Orders Service | Notification Service | HTTP / Webhook / Event | Async order event triggers (`ORDER_PLACED`, `ORDER_SHIPPED`) | Planned (Phase 2) |
-| Identity Service| Notification Service | HTTP / Webhook / Event | Security events (`PASSWORD_RESET`, `LOGIN_ANOMALY`) | Planned (Phase 2) |
+| Frontend | Identity Service | HTTPS / REST (JSON) | Login, Register, Session introspection (`/api/auth/*`, `/api/users/me`) | **Implemented** (Django) |
+| Frontend | Orders Service | HTTPS / REST (JSON) | Product catalog queries, Order placement (`/api/products`, `/api/orders`) | **Implemented** (Spring Boot) |
+| Frontend | Notification Service | HTTPS / REST (JSON) | Notification queries, Read status (`/api/notifications/*`) | **Implemented** (Express + TS) |
+| Orders Service | Notification Service | HTTP / REST (`/internal/notifications`) | Synchronous order notification dispatch (`ORDER_CREATED`) | **Implemented** (HTTP client) |
+| Orders / Identity | Notification Service | Event Broker (Kafka / RabbitMQ) | Asynchronous decoupled event streams | *Planned (Phase 2+)* |
+| Services | Services | mTLS / Service Auth | Internal service-to-service mutual authentication | *Planned (Security Hardening)* |

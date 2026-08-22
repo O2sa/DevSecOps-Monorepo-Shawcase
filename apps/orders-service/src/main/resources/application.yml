@@ -29,3 +29,8 @@ management:
 orders:
   jwt:
     secret: ${DJANGO_SECRET_KEY:django-insecure-dev-only-secret-key-not-for-production}
+
+# Notification Service integration configuration
+notification:
+  service:
+    url: ${NOTIFICATION_SERVICE_URL:http://localhost:8003}
