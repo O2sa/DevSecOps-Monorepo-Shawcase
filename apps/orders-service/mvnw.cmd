@@ -1,47 +1,33 @@
 @REM ----------------------------------------------------------------------------
-@REM Maven Start Up Batch script
+@REM Maven Wrapper Start Up Batch script
 @REM ----------------------------------------------------------------------------
 @IF "%DEBUG%" == "" @ECHO OFF
 @setlocal
 
 set ERROR_CODE=0
-
-@REM To isolate internal variables from possible post scripts, we use another setlocal
 @setlocal
 
-@REM ==== START VALIDATION ====
+set "MAVEN_PROJECTBASEDIR=%~dp0"
+if "%MAVEN_PROJECTBASEDIR:~-1%"=="\" set "MAVEN_PROJECTBASEDIR=%MAVEN_PROJECTBASEDIR:~0,-1%"
+
 if not "%JAVA_HOME%" == "" goto OkJHome
 
 for %%i in (java.exe) do set "JAVACMD=%%~$PATH:i"
 if not "%JAVACMD%" == "" goto checkJVersion
 
-echo.
-echo Error: JAVA_HOME is not defined correctly.
-echo We cannot execute java
-echo.
-goto error
+set "JAVACMD=java"
+goto exec
 
 :OkJHome
 set "JAVACMD=%JAVA_HOME%\bin\java.exe"
 
 :checkJVersion
-if exist "%JAVACMD%" goto chkMHome
+if not exist "%JAVACMD%" set "JAVACMD=java"
 
-echo.
-echo Error: JAVA_HOME is not defined correctly.
-echo We cannot execute "%JAVACMD%"
-echo.
-goto error
+:exec
+set "WRAPPER_JAR=%MAVEN_PROJECTBASEDIR%\.mvn\wrapper\maven-wrapper.jar"
 
-:chkMHome
-set "MAVEN_PROJECTBASEDIR=%~dp0"
-if "%MAVEN_PROJECTBASEDIR%" == "" goto error
-
-"%JAVACMD%" -version >nul 2>&1
-if ERRORLEVEL 1 goto error
-
-@REM Fallback to standard mvn or wrapper
-mvn %*
+"%JAVACMD%" "-Dmaven.multiModuleProjectDirectory=%MAVEN_PROJECTBASEDIR%" -cp "%WRAPPER_JAR%" org.apache.maven.wrapper.MavenWrapperMain %*
 if ERRORLEVEL 1 goto error
 goto end
 
