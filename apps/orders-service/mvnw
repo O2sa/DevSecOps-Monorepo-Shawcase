@@ -1,6 +1,6 @@
 #!/bin/sh
 # ----------------------------------------------------------------------------
-# Maven Wrapper Start Up Shell Script
+# Maven Start Up Shell script for Unix / Linux / macOS / WSL / Git Bash
 # ----------------------------------------------------------------------------
 
 PRG="$0"
@@ -13,14 +13,48 @@ while [ -h "$PRG" ]; do
     PRG=`dirname "$PRG"`/"$link"
   fi
 done
-MAVEN_PROJECTBASEDIR=`dirname "$PRG"`
 
+MAVEN_PROJECTBASEDIR=`cd "$(dirname "$PRG")" && pwd`
 WRAPPER_JAR="$MAVEN_PROJECTBASEDIR/.mvn/wrapper/maven-wrapper.jar"
 
-if [ -n "$JAVA_HOME" ]; then
+if [ -n "$JAVA_HOME" ] && [ -x "$JAVA_HOME/bin/java" ]; then
   JAVACMD="$JAVA_HOME/bin/java"
+elif [ -n "$JAVA_HOME" ] && [ -x "$JAVA_HOME/bin/java.exe" ]; then
+  JAVACMD="$JAVA_HOME/bin/java.exe"
+elif command -v java >/dev/null 2>&1; then
+  JAVACMD="java"
+elif command -v java.exe >/dev/null 2>&1; then
+  JAVACMD="java.exe"
+elif [ -x "/mnt/c/Program Files/Java/jdk-21.0.11/bin/java.exe" ]; then
+  JAVACMD="/mnt/c/Program Files/Java/jdk-21.0.11/bin/java.exe"
 else
   JAVACMD="java"
 fi
 
-exec "$JAVACMD" "-Dmaven.multiModuleProjectDirectory=$MAVEN_PROJECTBASEDIR" -cp "$WRAPPER_JAR" org.apache.maven.wrapper.MavenWrapperMain "$@"
+WRAPPER_JAR_ARG="$WRAPPER_JAR"
+PROJECT_BASEDIR_ARG="$MAVEN_PROJECTBASEDIR"
+
+case "$(uname -s)" in
+  CYGWIN*|MINGW*|MSYS*)
+    if command -v cygpath >/dev/null 2>&1; then
+      WRAPPER_JAR_ARG=`cygpath -w "$WRAPPER_JAR"`
+      PROJECT_BASEDIR_ARG=`cygpath -w "$MAVEN_PROJECTBASEDIR"`
+    fi
+    ;;
+  Linux*)
+    case "$JAVACMD" in
+      *.exe)
+        if command -v wslpath >/dev/null 2>&1; then
+          WRAPPER_JAR_ARG=`wslpath -w "$WRAPPER_JAR"`
+          PROJECT_BASEDIR_ARG=`wslpath -w "$MAVEN_PROJECTBASEDIR"`
+        fi
+        ;;
+    esac
+    ;;
+esac
+
+exec "$JAVACMD" \
+  "-Dmaven.multiModuleProjectDirectory=$PROJECT_BASEDIR_ARG" \
+  -cp "$WRAPPER_JAR_ARG" \
+  org.apache.maven.wrapper.MavenWrapperMain \
+  "$@"

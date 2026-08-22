@@ -25,10 +25,18 @@ public class JwtTokenProvider {
 
     public boolean validateToken(String token) {
         try {
-            Jwts.parser()
+            Claims claims = Jwts.parser()
                     .verifyWith(signingKey)
                     .build()
-                    .parseSignedClaims(token);
+                    .parseSignedClaims(token)
+                    .getPayload();
+
+            Long userId = extractValidUserId(claims);
+            if (userId == null || userId <= 0) {
+                log.debug("JWT rejected: missing or invalid user_id claim");
+                return false;
+            }
+
             return true;
         } catch (JwtException | IllegalArgumentException e) {
             log.debug("Invalid JWT token: {}", e.getMessage());
@@ -43,20 +51,9 @@ public class JwtTokenProvider {
                 .parseSignedClaims(token)
                 .getPayload();
 
-        Long userId = null;
-        Number userIdNumber = claims.get("user_id", Number.class);
-        if (userIdNumber != null) {
-            userId = userIdNumber.longValue();
-        } else {
-            Number fallbackUserId = claims.get("userId", Number.class);
-            if (fallbackUserId != null) {
-                userId = fallbackUserId.longValue();
-            } else if (claims.getSubject() != null) {
-                try {
-                    userId = Long.parseLong(claims.getSubject());
-                } catch (NumberFormatException ignored) {
-                }
-            }
+        Long userId = extractValidUserId(claims);
+        if (userId == null || userId <= 0) {
+            throw new JwtException("JWT does not contain a valid user_id claim");
         }
 
         String username = claims.get("username", String.class);
@@ -70,5 +67,20 @@ public class JwtTokenProvider {
         boolean isAdmin = Boolean.TRUE.equals(isAdminObj) || "admin".equalsIgnoreCase(role);
 
         return UserPrincipal.create(userId, username, email, role != null ? role : "user", isAdmin);
+    }
+
+    private Long extractValidUserId(Claims claims) {
+        Object rawUserId = claims.get("user_id");
+        if (rawUserId instanceof Number number) {
+            return number.longValue();
+        }
+        if (rawUserId instanceof String str) {
+            try {
+                return Long.parseLong(str);
+            } catch (NumberFormatException ignored) {
+                return null;
+            }
+        }
+        return null;
     }
 }

@@ -11,6 +11,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Map;
 
 import static org.hamcrest.Matchers.is;
@@ -41,6 +42,66 @@ class JwtAuthenticationTests {
         mockMvc.perform(get("/api/orders")
                         .header("Authorization", "Bearer " + token))
                 .andExpect(status().isOk());
+    }
+
+    @Test
+    void testJwtWithoutUserIdClaim_RejectedWith401() throws Exception {
+        SecretKey key = Keys.hmacShaKeyFor(JwtTestUtils.TEST_SECRET.getBytes(StandardCharsets.UTF_8));
+        String tokenWithoutUserId = Jwts.builder()
+                .subject("someuser")
+                .claims(Map.of(
+                        "username", "someuser",
+                        "email", "someuser@example.com",
+                        "role", "user",
+                        "is_admin", false
+                ))
+                .issuedAt(new Date())
+                .expiration(new Date(System.currentTimeMillis() + 3600000))
+                .signWith(key)
+                .compact();
+
+        mockMvc.perform(get("/api/orders/me")
+                        .header("Authorization", "Bearer " + tokenWithoutUserId))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.message", is("Authentication required")));
+    }
+
+    @Test
+    void testJwtWithInvalidNonPositiveUserId_RejectedWith401() throws Exception {
+        SecretKey key = Keys.hmacShaKeyFor(JwtTestUtils.TEST_SECRET.getBytes(StandardCharsets.UTF_8));
+        String tokenWithZeroUserId = Jwts.builder()
+                .subject("someuser")
+                .claims(Map.of(
+                        "user_id", 0,
+                        "username", "someuser",
+                        "role", "user"
+                ))
+                .issuedAt(new Date())
+                .expiration(new Date(System.currentTimeMillis() + 3600000))
+                .signWith(key)
+                .compact();
+
+        mockMvc.perform(get("/api/orders/me")
+                        .header("Authorization", "Bearer " + tokenWithZeroUserId))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.message", is("Authentication required")));
+
+        String tokenWithNegativeUserId = Jwts.builder()
+                .subject("someuser")
+                .claims(Map.of(
+                        "user_id", -10,
+                        "username", "someuser",
+                        "role", "user"
+                ))
+                .issuedAt(new Date())
+                .expiration(new Date(System.currentTimeMillis() + 3600000))
+                .signWith(key)
+                .compact();
+
+        mockMvc.perform(get("/api/orders/me")
+                        .header("Authorization", "Bearer " + tokenWithNegativeUserId))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.message", is("Authentication required")));
     }
 
     @Test
