@@ -51,9 +51,10 @@ services:
       - PYTHONUNBUFFERED=1
       - PORT=8001
       - DJANGO_DEBUG=False
-      - DJANGO_ALLOWED_HOSTS=*
+      - DJANGO_SECRET_KEY=${DJANGO_SECRET_KEY:-django-insecure-docker-compose-poc-secret-key-change-in-prod}
+      - DJANGO_ALLOWED_HOSTS=${DJANGO_ALLOWED_HOSTS:-localhost,127.0.0.1,identity-service,web,dashboard}
     healthcheck:
-      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:8001/health/')\" || exit 1"]
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:8001/health')\" || exit 1"]
       interval: 15s
       timeout: 5s
       retries: 3

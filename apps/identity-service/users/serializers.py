@@ -1,5 +1,7 @@
 from django.contrib.auth import get_user_model
 from django.contrib.auth.password_validation import validate_password
+from django.core.exceptions import ValidationError as DjangoValidationError
+from django.db import IntegrityError, transaction
 from rest_framework import serializers
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from .models import Role
@@ -20,7 +22,7 @@ class UserReadSerializer(serializers.ModelSerializer):
 class UserRegistrationSerializer(serializers.ModelSerializer):
     """
     Serializer for registering a new user.
-    Enforces password hashing, input validation, and unique fields.
+    Enforces Django's configured password validation, input validation, and unique fields.
     """
     password = serializers.CharField(
         write_only=True,
@@ -35,6 +37,8 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
         read_only_fields = ['id', 'role']
 
     def validate_username(self, value):
+        if not value:
+            raise serializers.ValidationError("This field is required.")
         if User.objects.filter(username__iexact=value).exists():
             raise serializers.ValidationError("A user with that username already exists.")
         return value
@@ -46,21 +50,48 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("A user with that email already exists.")
         return value.lower()
 
-    def validate_password(self, value):
-        if len(value) < 8:
-            raise serializers.ValidationError("Password must be at least 8 characters long.")
-        return value
+    def validate(self, attrs):
+        password = attrs.get('password')
+        username = attrs.get('username')
+        email = attrs.get('email')
+
+        # Use Django's standard password validation with full user context
+        if password:
+            temp_user = User(username=username, email=email)
+            try:
+                validate_password(password, user=temp_user)
+            except DjangoValidationError as exc:
+                raise serializers.ValidationError({"password": list(exc.messages)})
+
+        return attrs
 
     def create(self, validated_data):
         password = validated_data.pop('password')
-        user = User(
-            username=validated_data['username'],
-            email=validated_data['email'],
-            role=Role.USER
-        )
-        user.set_password(password)
-        user.save()
-        return user
+        try:
+            with transaction.atomic():
+                user = User(
+                    username=validated_data['username'],
+                    email=validated_data['email'],
+                    role=Role.USER
+                )
+                user.set_password(password)
+                user.save()
+                return user
+        except IntegrityError as exc:
+            # Handle potential race conditions where uniqueness check passed but concurrent insert collided
+            err_msg = str(exc).lower()
+            if 'username' in err_msg:
+                raise serializers.ValidationError(
+                    {"username": ["A user with that username already exists."]}
+                )
+            elif 'email' in err_msg:
+                raise serializers.ValidationError(
+                    {"email": ["A user with that email already exists."]}
+                )
+            else:
+                raise serializers.ValidationError(
+                    {"username": ["A user with that username or email already exists."]}
+                )
 
 
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):

@@ -8,36 +8,41 @@ The business functionality of each application is intentionally minimal (health 
 
 ## 🏛️ System Architecture
 
+The intended future communication model connects frontends directly to domain microservices rather than a sequential chain:
+
 ```
-[ Public Users ]                     [ Admin / Ops Users ]
-       │                                       │
-       ▼                                       ▼
-┌──────────────┐                       ┌────────────────┐
-│   Next.js    │                       │    Angular     │
-│  (apps/web)  │                       │(apps/dashboard)│
-│  Port: 3000  │                       │   Port: 4200   │
-└──────┬───────┘                       └───────┬────────┘
-       │                                       │
-       └───────────────────┬───────────────────┘
-                           ▼
-               ┌───────────────────────┐
-               │   Identity Service    │
-               │(apps/identity-service)│
-               │     Django (8001)     │
-               └───────────┬───────────┘
-                           ▼
-               ┌───────────────────────┐
-               │    Orders Service     │
-               │ (apps/orders-service) │
-               │   Spring Boot (8002)  │
-               └───────────┬───────────┘
-                           ▼
-               ┌───────────────────────┐
-               │ Notification Service  │
-               │(apps/notification-srv)│
-               │     Express (8003)    │
-               └───────────────────────┘
+[ Public Users ]                                [ Admin / Ops Users ]
+       │                                                 │
+       ▼                                                 ▼
+┌──────────────┐                                 ┌────────────────┐
+│   Next.js    │                                 │    Angular     │
+│  (apps/web)  │                                 │(apps/dashboard)│
+│  Port: 3000  │                                 │   Port: 4200   │
+└──────┬───┬───┘                                 └───┬───┬────┬───┘
+       │   │                                         │   │    │
+       │   └─────────────────────────┐               │   │    │
+       │                             ▼               │   │    │
+       │                  ┌───────────────────────┐  │   │    │
+       │                  │   Identity Service    │◄─┘   │    │
+       │                  │(apps/identity-service)│      │    │
+       │                  │     Django (8001)     │      │    │
+       │                  └───────────────────────┘      │    │
+       │                                                 │    │
+       ▼                                                 │    │
+┌───────────────────────┐                                │    │
+│    Orders Service     │◄───────────────────────────────┘    │
+│ (apps/orders-service) │                                     │
+│   Spring Boot (8002)  │                                     │
+└──────────┬────────────┘                                     │
+           │                                                  │
+           │      ┌───────────────────────┐                   │
+           └─────►│ Notification Service  │◄──────────────────┘
+                  │(apps/notification-srv)│
+                  │     Express (8003)    │
+                  └───────────────────────┘
 ```
+
+*(Note: In Phase 1, the Identity Service APIs are implemented while remaining services operate with health probes. Cross-service integration will be established in Phase 2).*
 
 ---
 
@@ -85,7 +90,7 @@ The business functionality of each application is intentionally minimal (health 
 |---|---|---|---|---|
 | **`web`** | Next.js (Node 20+) | Public Client Landing & E-Commerce Portal | `3000` | `http://localhost:3000/api/health` |
 | **`dashboard`** | Angular 18 (Nginx) | Internal Admin & Operations Dashboard | `4200` | `http://localhost:4200/health.json` |
-| **`identity-service`** | Django 5 (Python 3.11+) | Identity, Authentication & RBAC | `8001` | `http://localhost:8001/health/` |
+| **`identity-service`** | Django 5 (Python 3.11+) | Identity, Authentication & RBAC | `8001` | `http://localhost:8001/health` |
 | **`orders-service`** | Spring Boot 3 (Java 21) | Products, Inventory & Order Lifecycle | `8002` | `http://localhost:8002/health` |
 | **`notification-service`** | Express.js (Node 20+) | Internal Alerts & Event Notifications | `8003` | `http://localhost:8003/health` |
 
@@ -133,8 +138,9 @@ python -m venv .venv
 # On Windows: .venv\Scripts\activate
 # On Linux/macOS: source .venv/bin/activate
 pip install -r requirements.txt
+python manage.py migrate
 python manage.py runserver 8001
-# Health: http://localhost:8001/health/
+# Health: http://localhost:8001/health
 ```
 
 #### 4. Spring Boot Orders Service (`apps/orders-service`)
@@ -172,12 +178,12 @@ This repository is designed to be progressively evolved across 10 distinct DevSe
 9. **Phase 9: Terraform & Infrastructure-as-Code Security (Checkov, tfsec, Infracost)**
 10. **Phase 10: Runtime Security & Observability (Falco, OpenTelemetry, Prometheus, Grafana)**
 
-For detailed specifications, see [`docs/security/devsecops-roadmap.md`](file:///c:/Users/msii/Documents/devsecops_monorepo/docs/security/devsecops-roadmap.md).
+For detailed specifications, see [`docs/security/devsecops-roadmap.md`](docs/security/devsecops-roadmap.md).
 
 ---
 
 ## 📖 Further Documentation
 
-- **[System Architecture & Data Flows](file:///c:/Users/msii/Documents/devsecops_monorepo/docs/architecture/system-overview.md)**
-- **[Service Catalog & Responsibilities](file:///c:/Users/msii/Documents/devsecops_monorepo/docs/architecture/service-catalog.md)**
-- **[Contributing Guide](file:///c:/Users/msii/Documents/devsecops_monorepo/CONTRIBUTING.md)**
+- **[System Architecture & Data Flows](docs/architecture/system-overview.md)**
+- **[Service Catalog & Responsibilities](docs/architecture/service-catalog.md)**
+- **[Contributing Guide](CONTRIBUTING.md)**

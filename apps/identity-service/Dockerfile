@@ -36,11 +36,15 @@ RUN addgroup --system --gid 1001 appgroup && \
 # Copy installed wheels/packages from builder
 COPY --from=builder --chown=appuser:appgroup /root/.local /home/appuser/.local
 
-# Copy application source
+# Copy application source and entrypoint
 COPY --chown=appuser:appgroup . .
+
+# Ensure entrypoint script is executable
+RUN chmod +x /app/docker-entrypoint.sh
 
 USER appuser
 
 EXPOSE 8001
 
+ENTRYPOINT ["/app/docker-entrypoint.sh"]
 CMD ["gunicorn", "--bind", "0.0.0.0:8001", "--workers", "2", "--threads", "4", "config.wsgi:application"]

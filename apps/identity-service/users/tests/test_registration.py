@@ -1,5 +1,6 @@
+from unittest.mock import patch
 from django.contrib.auth import get_user_model
-from django.urls import reverse
+from django.db import IntegrityError
 from rest_framework import status
 from rest_framework.test import APITestCase
 
@@ -71,7 +72,7 @@ class UserRegistrationTests(APITestCase):
         self.assertIn('password', response.data['errors'])
 
     def test_registration_short_password_fails(self):
-        """Verify password validation rejects passwords under 8 characters."""
+        """Verify MinimumLengthValidator rejects passwords under 8 characters."""
         payload = {
             'username': 'john',
             'email': 'john@example.com',
@@ -81,3 +82,50 @@ class UserRegistrationTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn('errors', response.data)
         self.assertIn('password', response.data['errors'])
+        self.assertTrue(any('at least 8 characters' in msg for msg in response.data['errors']['password']))
+
+    def test_registration_common_password_fails(self):
+        """Verify CommonPasswordValidator rejects commonly used weak passwords."""
+        payload = {
+            'username': 'john',
+            'email': 'john@example.com',
+            'password': 'password123'
+        }
+        response = self.client.post(self.register_url, payload, format='json')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('errors', response.data)
+        self.assertIn('password', response.data['errors'])
+
+    def test_registration_password_similar_to_username_fails(self):
+        """Verify UserAttributeSimilarityValidator rejects password too similar to username."""
+        payload = {
+            'username': 'johnathan',
+            'email': 'unique@example.com',
+            'password': 'johnathan123'
+        }
+        response = self.client.post(self.register_url, payload, format='json')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('errors', response.data)
+        self.assertIn('password', response.data['errors'])
+        self.assertTrue(any('too similar' in msg for msg in response.data['errors']['password']))
+
+    def test_registration_password_similar_to_email_fails(self):
+        """Verify UserAttributeSimilarityValidator rejects password too similar to email."""
+        payload = {
+            'username': 'uniqueuser',
+            'email': 'johnathan@example.com',
+            'password': 'johnathan123'
+        }
+        response = self.client.post(self.register_url, payload, format='json')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('errors', response.data)
+        self.assertIn('password', response.data['errors'])
+        self.assertTrue(any('too similar' in msg for msg in response.data['errors']['password']))
+
+    def test_registration_race_condition_integrity_error_handled(self):
+        """Verify database IntegrityError during save is handled as a 400 Bad Request."""
+        with patch.object(User, 'save', side_effect=IntegrityError("UNIQUE constraint failed: users_user.username")):
+            response = self.client.post(self.register_url, self.valid_payload, format='json')
+            self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+            self.assertIn('errors', response.data)
+            self.assertIn('username', response.data['errors'])

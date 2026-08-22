@@ -59,14 +59,14 @@ Copy `.env.example` to `.env` (or configure system environment variables):
 cp .env.example .env
 ```
 
-| Variable | Default | Description |
-|---|---|---|
-| `DJANGO_SECRET_KEY` | *(scaffold-key)* | Cryptographic key for session & token signing |
-| `DJANGO_DEBUG` | `True` | Enable/disable debug mode (`False` in production) |
-| `DJANGO_ALLOWED_HOSTS` | `localhost,127.0.0.1,identity-service,0.0.0.0` | Comma-delimited list of valid host headers |
-| `PORT` | `8001` | Service bind port |
-| `JWT_ACCESS_TOKEN_LIFETIME_MINUTES` | `60` | JWT access token validity duration |
-| `JWT_REFRESH_TOKEN_LIFETIME_DAYS` | `7` | JWT refresh token validity duration |
+| Variable | Default | Required in Production (`DJANGO_DEBUG=False`) | Description |
+|---|---|---|---|
+| `DJANGO_SECRET_KEY` | *(dev fallback)* | **Yes (Fails fast if missing)** | Cryptographic key for session & token signing |
+| `DJANGO_DEBUG` | `True` | No (Defaults to `True` for local dev) | Enable/disable debug mode (`False` in production) |
+| `DJANGO_ALLOWED_HOSTS` | `localhost,127.0.0.1,identity-service,0.0.0.0` | No | Comma-delimited list of valid host headers |
+| `PORT` | `8001` | No | Service bind port |
+| `JWT_ACCESS_TOKEN_LIFETIME_MINUTES` | `60` | No | JWT access token validity duration |
+| `JWT_REFRESH_TOKEN_LIFETIME_DAYS` | `7` | No | JWT refresh token validity duration |
 
 ---
 
@@ -106,7 +106,7 @@ The service will be live at [http://localhost:8001](http://localhost:8001).
 
 ### Production Server (Gunicorn)
 ```bash
-gunicorn --bind 0.0.0.0:8001 --workers 2 --threads 4 config.wsgi:application
+DJANGO_DEBUG=False DJANGO_SECRET_KEY="your-production-secret" gunicorn --bind 0.0.0.0:8001 --workers 2 --threads 4 config.wsgi:application
 ```
 
 ---

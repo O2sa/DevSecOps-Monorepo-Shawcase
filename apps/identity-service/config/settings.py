@@ -1,22 +1,41 @@
 from datetime import timedelta
 import os
 from pathlib import Path
+from django.core.exceptions import ImproperlyConfigured
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# Security configuration
-SECRET_KEY = os.environ.get(
-    'DJANGO_SECRET_KEY',
-    'django-insecure-devsecops-poc-identity-service-scaffold-key-only'
-)
 
-DEBUG = os.environ.get('DJANGO_DEBUG', 'True').lower() in ('true', '1', 'yes')
+def get_env_bool(name: str, default: bool = False) -> bool:
+    """Parse environment string into a boolean safely."""
+    val = os.environ.get(name)
+    if val is None:
+        return default
+    return val.strip().lower() in ('true', '1', 't', 'yes', 'y')
 
-ALLOWED_HOSTS = os.environ.get(
-    'DJANGO_ALLOWED_HOSTS',
-    'localhost,127.0.0.1,identity-service,0.0.0.0'
-).split(',')
+
+# Debug configuration
+DEBUG = get_env_bool('DJANGO_DEBUG', default=True)
+
+# Security: SECRET_KEY configuration
+SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY')
+if not SECRET_KEY:
+    if DEBUG:
+        # Development-only fallback key
+        SECRET_KEY = 'django-insecure-dev-only-secret-key-not-for-production'
+    else:
+        raise ImproperlyConfigured(
+            "DJANGO_SECRET_KEY environment variable must be explicitly set when DJANGO_DEBUG is False."
+        )
+
+# Allowed hosts
+ALLOWED_HOSTS = [
+    host.strip() for host in os.environ.get(
+        'DJANGO_ALLOWED_HOSTS',
+        'localhost,127.0.0.1,identity-service,0.0.0.0'
+    ).split(',') if host.strip()
+]
 
 # Custom User Model
 AUTH_USER_MODEL = 'users.User'
@@ -47,6 +66,9 @@ MIDDLEWARE = [
 ]
 
 ROOT_URLCONF = 'config.urls'
+
+# URL Configuration: Enforce no trailing slash convention without unexpected redirects
+APPEND_SLASH = False
 
 TEMPLATES = [
     {
@@ -103,7 +125,7 @@ SIMPLE_JWT = {
     'USER_ID_CLAIM': 'user_id',
 }
 
-# Password validation
+# Password validation: Standard Django validators
 AUTH_PASSWORD_VALIDATORS = [
     {
         'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',

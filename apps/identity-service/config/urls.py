@@ -1,13 +1,13 @@
 from django.urls import include, path
+from health.views import health_check
 
 urlpatterns = [
-    # Health check endpoint
-    path('health/', include('health.urls')),
-    path('health', include('health.urls')),
+    # Health check endpoint (No trailing slash)
+    path('health', health_check, name='health_check'),
 
     # REST API endpoints
     path('api/', include('users.urls')),
 
     # Root fallback
-    path('', include('health.urls')),
+    path('', health_check, name='root_health_check'),
 ]

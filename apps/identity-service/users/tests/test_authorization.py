@@ -1,7 +1,6 @@
 from django.contrib.auth import get_user_model
 from rest_framework import status
 from rest_framework.test import APITestCase
-from rest_framework_simplejwt.tokens import RefreshToken
 from users.models import Role
 
 User = get_user_model()
@@ -9,18 +8,20 @@ User = get_user_model()
 
 class AuthorizationTests(APITestCase):
     """
-    Tests for Authorization and Role-Based Permissions.
+    Tests for Authorization and Role-Based Permissions (No trailing slash convention).
     """
 
     def setUp(self):
+        self.login_url = '/api/auth/login'
         self.me_url = '/api/users/me'
         self.users_url = '/api/users'
+        self.password = 'SecurePassword123!'
 
         # Regular user
         self.regular_user = User.objects.create_user(
             username='regularuser',
             email='regular@example.com',
-            password='SecurePassword123!',
+            password=self.password,
             role=Role.USER
         )
 
@@ -28,13 +29,17 @@ class AuthorizationTests(APITestCase):
         self.admin_user = User.objects.create_user(
             username='adminuser',
             email='admin@example.com',
-            password='SecurePassword123!',
+            password=self.password,
             role=Role.ADMIN
         )
 
-    def _get_token(self, user):
-        refresh = RefreshToken.for_user(user)
-        return str(refresh.access_token)
+    def _get_token_via_login(self, username):
+        response = self.client.post(
+            self.login_url,
+            {'username': username, 'password': self.password},
+            format='json'
+        )
+        return response.data['access']
 
     def test_unauthenticated_access_to_me_endpoint_rejected(self):
         """Verify unauthenticated requests to /api/users/me are rejected with 401."""
@@ -48,7 +53,7 @@ class AuthorizationTests(APITestCase):
 
     def test_authenticated_user_access_to_me_endpoint_allowed(self):
         """Verify authenticated user receives their own user profile."""
-        token = self._get_token(self.regular_user)
+        token = self._get_token_via_login('regularuser')
         self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {token}')
 
         response = self.client.get(self.me_url)
@@ -61,7 +66,7 @@ class AuthorizationTests(APITestCase):
 
     def test_regular_user_denied_access_to_admin_users_list(self):
         """Verify standard user is forbidden (403) from listing all users."""
-        token = self._get_token(self.regular_user)
+        token = self._get_token_via_login('regularuser')
         self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {token}')
 
         response = self.client.get(self.users_url)
@@ -74,7 +79,7 @@ class AuthorizationTests(APITestCase):
 
     def test_admin_user_allowed_access_to_users_list(self):
         """Verify admin user can list all registered users."""
-        token = self._get_token(self.admin_user)
+        token = self._get_token_via_login('adminuser')
         self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {token}')
 
         response = self.client.get(self.users_url)
