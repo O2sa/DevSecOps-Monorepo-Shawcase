@@ -1,0 +1,129 @@
+# ==============================================================================
+# Global DevSecOps Monorepo .gitignore
+# ==============================================================================
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# IDEs and Editors
+.idea/
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+!.vscode/launch.json
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+*~
+
+# Logs and runtime data
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Node.js / JavaScript / TypeScript (Next.js, Angular, Express)
+node_modules/
+.pnp
+.pnp.js
+dist/
+build/
+out/
+.next/
+.angular/
+.cache/
+coverage/
+*.tsbuildinfo
+.eslintcache
+
+# Python / Django
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+ENV/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+db.sqlite3
+db.sqlite3-journal
+media/
+staticfiles/
+
+# Java / Maven / Gradle (Spring Boot)
+target/
+*.jar
+*.war
+*.nar
+*.ear
+*.zip
+*.tar.gz
+*.rar
+hs_err_pid*
+replay_pid*
+.gradle/
+build/
+!gradle/wrapper/gradle-wrapper.jar
+!mvnw
+!mvnw.cmd
+!.mvn/wrapper/maven-wrapper.jar
+
+# Terraform & IaC
+.terraform/
+*.tfstate
+*.tfstate.*
+crash.log
+crash.*.log
+*.tfvars
+*.tfvars.json
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+.terraformrc
+terraform.rc
+
+# Docker & Local Dev Environment
+.docker/
+docker-compose.override.yml
+*.local.env
+.env
+.env.local
+.env.*.local
+
+# Security & Reports (Local scanning artifacts)
+security-reports/
+trivy-results.json
+snyk-report.json
+zap-report.html
+semgrep.sarif
+gitleaks-report.json
+*.sarif

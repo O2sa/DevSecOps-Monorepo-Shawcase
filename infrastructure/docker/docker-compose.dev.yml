@@ -1,0 +1,35 @@
+# Development override configuration: Volume mounts for live-reloading
+services:
+  web:
+    build:
+      target: deps
+    command: npm run dev
+    volumes:
+      - ../../apps/web:/app
+      - /app/node_modules
+      - /app/.next
+
+  dashboard:
+    build:
+      target: builder
+    command: npm start
+    volumes:
+      - ../../apps/dashboard:/app
+      - /app/node_modules
+
+  identity-service:
+    command: python manage.py runserver 0.0.0.0:8001
+    environment:
+      - DJANGO_DEBUG=True
+    volumes:
+      - ../../apps/identity-service:/app
+
+  orders-service:
+    environment:
+      - SPRING_PROFILES_ACTIVE=dev
+
+  notification-service:
+    command: npm run dev
+    volumes:
+      - ../../apps/notification-service:/app
+      - /app/node_modules

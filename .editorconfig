@@ -1,0 +1,39 @@
+# EditorConfig is awesome: https://EditorConfig.org
+
+# Top-most EditorConfig file
+root = true
+
+# Default rules for all files
+[*]
+indent_style = space
+indent_size = 2
+end_of_line = lf
+charset = utf-8
+trim_trailing_whitespace = true
+insert_final_newline = true
+
+# Python files (PEP 8 standard)
+[*.py]
+indent_size = 4
+
+# Java files (Standard Java indentation)
+[*.java]
+indent_size = 4
+
+# Shell scripts
+[*.{sh,bash}]
+indent_size = 2
+end_of_line = lf
+
+# Windows batch / PowerShell scripts
+[*.{bat,cmd,ps1}]
+indent_size = 2
+end_of_line = crlf
+
+# Makefiles
+[Makefile]
+indent_style = tab
+
+# Markdown documentation
+[*.md]
+trim_trailing_whitespace = false

@@ -1,0 +1,38 @@
+<div class="layout">
+  <aside class="sidebar">
+    <div class="logo">
+      <span class="logo-badge">DevSecOps</span>
+      <h2>Admin Portal</h2>
+    </div>
+    <nav class="nav">
+      <a class="nav-item active">Overview</a>
+      <a class="nav-item">Users & Roles (Phase 2)</a>
+      <a class="nav-item">Orders & Catalog (Phase 2)</a>
+      <a class="nav-item">Notifications (Phase 2)</a>
+      <a class="nav-item">Security Compliance</a>
+    </nav>
+  </aside>
+
+  <main class="content">
+    <header class="topbar">
+      <h1>Operations Dashboard</h1>
+      <span class="user-pill">Admin (Scaffold Mode)</span>
+    </header>
+
+    <div class="dashboard-grid">
+      <div class="card stat-card" *ngFor="let s of services">
+        <div class="card-header">
+          <h3>{{ s.name }}</h3>
+          <span class="badge">{{ s.status }}</span>
+        </div>
+        <p class="stat-detail">Stack: <strong>{{ s.stack }}</strong></p>
+        <p class="stat-detail">Port: <code>{{ s.port }}</code></p>
+      </div>
+    </div>
+
+    <div class="card info-banner">
+      <h3>Phase 1 Monorepo Scaffolding</h3>
+      <p>This Angular dashboard represents the internal administration portal. Business features (user management, order tracking, notifications) will be incrementally connected in Phase 2.</p>
+    </div>
+  </main>
+</div>
