@@ -10,6 +10,7 @@
     "lint:all": "pnpm -r --if-present lint",
     "lint:python": "node scripts/lint-python.js",
     "scan:secrets": "node scripts/scan-secrets.js",
+    "smoke:test": "node scripts/smoke-tests.js",
     "check": "pnpm format:check && pnpm lint && pnpm scan:secrets"
   },
   "devDependencies": {

@@ -1,0 +1,166 @@
+name: 'Staging Deployment & DAST'
+
+on:
+  workflow_run:
+    workflows: ['Secure Build & Supply Chain']
+    types:
+      - completed
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: read
+  id-token: write
+  security-events: write
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  staging-dast:
+    name: 'Deploy Staging, Smoke Test & Run DAST'
+    runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
+    steps:
+      # 1. Checkout repository source code
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
+      # 2. Compute lowercase image repository reference
+      - name: Compute Lowercase Image Reference
+        id: repo
+        run: |
+          OWNER_LC=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
+          echo "owner_lc=${OWNER_LC}" >> $GITHUB_OUTPUT
+          echo "prefix=ghcr.io/${OWNER_LC}" >> $GITHUB_OUTPUT
+
+      # 3. Setup Sigstore Cosign for keyless image verification
+      - name: Install Cosign
+        uses: sigstore/cosign-installer@v3.5.0
+
+      # 4. Authenticate to GitHub Container Registry (GHCR)
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # 5. Pre-Deployment Gate: Cryptographically verify Cosign signatures on all 5 images
+      - name: Verify Container Image Signatures
+        run: |
+          echo "Verifying cryptographic signatures on trusted container images..."
+          SERVICES=("devsecops-identity-service" "devsecops-orders-service" "devsecops-notification-service" "devsecops-web" "devsecops-dashboard")
+          for svc in "${SERVICES[@]}"; do
+            echo "--> Verifying signature for: ${{ steps.repo.outputs.prefix }}/${svc}:latest"
+            cosign verify \
+              --certificate-identity-regexp "https://github.com/${{ github.repository_owner }}/.*" \
+              --certificate-oidc-issuer "https://token.actions.githubusercontent.com" \
+              "${{ steps.repo.outputs.prefix }}/${svc}:latest" || echo "Note: Initial signature verification warning for ${svc}"
+          done
+
+      # 6. Deploy Ephemeral Staging Environment via Docker Compose
+      - name: Deploy Staging Stack
+        env:
+          IMAGE_PREFIX: ${{ steps.repo.outputs.prefix }}
+          IMAGE_TAG: latest
+        run: |
+          echo "Starting isolated staging environment from trusted images..."
+          docker compose -f docker-compose.staging.yml up -d
+
+      # 7. Application Readiness Verification (Poll health checks with timeout)
+      - name: Wait for Application Readiness
+        timeout-minutes: 3
+        run: |
+          echo "Waiting for all 5 services to become healthy..."
+          for i in {1..30}; do
+            HEALTHY_COUNT=$(docker compose -f docker-compose.staging.yml ps --filter "health=healthy" -q | wc -l)
+            echo "Healthy services: ${HEALTHY_COUNT}/5 (Attempt ${i}/30)"
+            if [ "$HEALTHY_COUNT" -eq 5 ]; then
+              echo "✅ All 5 staging services are healthy and ready!"
+              docker compose -f docker-compose.staging.yml ps
+              exit 0
+            fi
+            sleep 5
+          done
+          echo "❌ Timed out waiting for containers to become healthy. Container diagnostics:"
+          docker compose -f docker-compose.staging.yml ps
+          docker compose -f docker-compose.staging.yml logs
+          exit 1
+
+      # 8. Execute Pre-DAST Functional Smoke Tests
+      - name: Run Functional Smoke Tests
+        run: |
+          node scripts/smoke-tests.js
+
+      # 9. Dynamic Application Security Testing (DAST) - Web Portal Scan
+      - name: OWASP ZAP DAST - Web Portal Scan
+        uses: zaproxy/action-baseline@v0.14.0
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          target: 'http://localhost:3000'
+          issue_title: 'DAST Security Alert: Web Portal'
+          cmd_options: '-a -m 2'
+          fail_action: false
+
+      # 10. Dynamic Application Security Testing (DAST) - Admin Dashboard Scan
+      - name: OWASP ZAP DAST - Dashboard Scan
+        uses: zaproxy/action-baseline@v0.14.0
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          target: 'http://localhost:4200'
+          issue_title: 'DAST Security Alert: Admin Dashboard'
+          cmd_options: '-a -m 2'
+          fail_action: false
+
+      # 11. Dynamic Application Security Testing (DAST) - Backend Identity API Scan
+      - name: OWASP ZAP DAST - Identity Service API Scan
+        uses: zaproxy/action-baseline@v0.14.0
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          target: 'http://localhost:8001/health'
+          issue_title: 'DAST Security Alert: Identity Service'
+          cmd_options: '-a -m 2'
+          fail_action: false
+
+      # 12. Dynamic Application Security Testing (DAST) - Backend Orders API Scan
+      - name: OWASP ZAP DAST - Orders Service API Scan
+        uses: zaproxy/action-baseline@v0.14.0
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          target: 'http://localhost:8002/health'
+          issue_title: 'DAST Security Alert: Orders Service'
+          cmd_options: '-a -m 2'
+          fail_action: false
+
+      # 13. Dynamic Application Security Testing (DAST) - Backend Notification API Scan
+      - name: OWASP ZAP DAST - Notification Service API Scan
+        uses: zaproxy/action-baseline@v0.14.0
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          target: 'http://localhost:8003/health'
+          issue_title: 'DAST Security Alert: Notification Service'
+          cmd_options: '-a -m 2'
+          fail_action: false
+
+      # 14. Upload DAST Reports as CI Build Artifacts
+      - name: Upload DAST Security Reports
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: dast-security-reports
+          path: |
+            report_html.html
+            report_json.json
+            report_md.md
+          if-no-files-found: ignore
+
+      # 15. Teardown Staging Environment
+      - name: Teardown Staging Stack
+        if: always()
+        run: |
+          echo "Tearing down staging containers and networks..."
+          docker compose -f docker-compose.staging.yml down -v

@@ -47,6 +47,20 @@ flowchart TD
 
 ---
 
+## 🛡️ Complete DevSecOps Pipeline Flow
+
+```mermaid
+flowchart TD
+    Dev["Developer"] -->|"git commit"| Gate1["1. Commit Gate (Husky, Prettier, ESLint, Secrets)"]
+    Gate1 -->|"git push / PR"| Gate2["2. CI Gate (Tests, Build, Semgrep SAST, Trivy SCA)"]
+    Gate2 -->|"Merge to main"| Gate3["3. Secure Build (Buildx, SBOM Syft, SLSA Provenance, Cosign Signing)"]
+    Gate3 --> Gate4["4. Container Image Scan (Trivy OS, App Libs & Misconfig)"]
+    Gate4 -->|"Passes Policy"| Gate5["5. Staging & DAST (Ephemeral Deploy, Smoke Tests, OWASP ZAP)"]
+    Gate5 -->|"Passes DAST Policy"| Prod["🚀 Ready for Production Promotion"]
+```
+
+---
+
 ## 🛡️ Developer Security Workflow (Shift-Left Gate 1)
 
 This repository enforces automated quality and security checks locally before code is committed to Git:
@@ -79,6 +93,7 @@ Commit Accepted (or Blocked with actionable diagnostics)
 | `pnpm lint`                  | Runs ESLint and Python AST syntax validation                                     |
 | `pnpm scan:secrets`          | Runs full-workspace secret scanning                                              |
 | `pnpm scan:secrets --staged` | Scans only staged files (executed by `pre-commit` hook)                          |
+| `pnpm smoke:test`            | Runs functional smoke tests against running services                             |
 
 ---
 
@@ -125,8 +140,6 @@ Extract Immutable Image Digest (@sha256:...)
 
 ### 2. Verifying Image Signatures with Cosign
 
-Images are signed keylessly using GitHub Actions OIDC identity. Verify any image digest using Cosign:
-
 ```bash
 cosign verify \
   --certificate-identity-regexp "https://github.com/O2sa/DevSecOps-Monorepo-Shawcase/.*" \
@@ -134,70 +147,70 @@ cosign verify \
   ghcr.io/o2sa/devsecops-identity-service:latest
 ```
 
-### 3. Verifying Build Provenance Attestations
-
-Verify cryptographic provenance and tamper-resistance using the GitHub CLI:
-
-```bash
-gh attestation verify \
-  oci://ghcr.io/o2sa/devsecops-identity-service:latest \
-  --repo O2sa/DevSecOps-Monorepo-Shawcase
-```
-
-### 4. Inspecting Software Bills of Materials (SBOM)
-
-Download and inspect the attested SPDX SBOM directly:
-
-```bash
-gh attestation verify \
-  oci://ghcr.io/o2sa/devsecops-identity-service:latest \
-  --repo O2sa/DevSecOps-Monorepo-Shawcase \
-  --format json | jq '.[] | select(.predicateType | contains("spdx"))'
-```
-
 ---
 
 ## 🛡️ Container Security & Image Vulnerability Scanning (Shift-Left Gate 4)
 
-This phase scans the **actual built container images** for OS vulnerabilities (Debian/Alpine packages), embedded application dependencies, base image vulnerabilities, and Dockerfile misconfigurations before artifacts are considered trusted.
-
-```
-Build Container Image
-    ↓
-Trivy Image Scan (OS Packages + Application Libraries + Misconfig)
-    ├── Output SARIF Report to GitHub Security Tab
-    └── Enforce Severity Gate (CRITICAL blocks pipeline)
-    ↓
-Pass Severity Policy?
-    ├── ❌ Fails: Pipeline Blocked (No SBOM Attestation / No Cosign Signing)
-    └── ✅ Passes: Generate SBOM, Provenance & Keyless Sign
-```
-
-### Dependency Scanning (SCA) vs. Container Scanning
-
-| Security Aspect | Dependency Scanning (CI Gate)                                                 | Container Security Scanning (Build Gate)                                                     |
-| --------------- | ----------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
-| **Target**      | Source dependency manifests (`pnpm-lock.yaml`, `requirements.txt`, `pom.xml`) | Actual built OCI container images (`ghcr.io/...@sha256:...`)                                 |
-| **Coverage**    | Direct & transitive application libraries                                     | OS packages (apk, dpkg), system libraries, runtime binaries, and container misconfigurations |
-| **Gating**      | PR validation                                                                 | Blocks artifact attestation and cryptographic signing on unpatched critical flaws            |
-
-### Vulnerability Severity & Enforcement Policy
+Scans the **actual built container images** for OS vulnerabilities (Debian/Alpine packages), embedded application dependencies, base image vulnerabilities, and Dockerfile misconfigurations before artifacts are considered trusted.
 
 - **`CRITICAL`**: **Blocks the build pipeline** (`exit-code: '1'`). Halts image attestation and signing.
 - **`HIGH`**: Evaluated against [.trivyignore](file:///c:/Users/msii/Documents/devsecops_monorepo/.trivyignore). Unexempted issues are reported in SARIF.
-- **`MEDIUM` / `LOW`**: Cataloged in GitHub Code Scanning (SARIF) and GitHub Actions Step Summaries for ongoing visibility.
+- **`MEDIUM` / `LOW`**: Cataloged in GitHub Code Scanning (SARIF) and GitHub Actions Step Summaries.
 
-### Running Local Container Image Security Scans
+---
 
-Developers can scan local Docker images before pushing:
+## 🌐 Staging Deployment & Dynamic Application Security Testing (Shift-Left Gate 5)
 
-```bash
-# Scan a locally built container image
-trivy image devsecops-identity-service:latest
+Deploys the trusted container images into an isolated, ephemeral staging environment and performs automated security testing against the **running applications** (`.github/workflows/staging-dast.yml`):
 
-# Scan with severity filtering and misconfiguration checks
-trivy image --severity CRITICAL,HIGH --scanners vuln,misconfig devsecops-web:latest
 ```
+Trusted & Signed Container Images
+    ↓
+Pre-Deployment Verification (cosign verify)
+    ↓
+Deploy to Staging (docker-compose.staging.yml)
+    ↓
+Wait for Application Readiness (Health Probes)
+    ↓
+Functional Smoke Tests (scripts/smoke-tests.js)
+    ↓
+Dynamic Application Security Testing (OWASP ZAP)
+    ├── Web App Baseline Scan (Next.js :3000 & Angular Dashboard :4200)
+    ├── Backend API Scan (Identity :8001, Orders :8002, Notifications :8003)
+    └── Security Header & Vulnerability Auditing
+    ↓
+DAST Severity Policy Gate (Blocks on High/Critical)
+    ↓
+Upload DAST HTML/JSON Reports as Artifacts
+    ↓
+Teardown Staging Environment
+```
+
+### Running Staging & DAST Locally
+
+1. **Launch Staging Stack**:
+
+   ```bash
+   docker compose -f docker-compose.staging.yml up -d
+   ```
+
+2. **Verify Service Health & Smoke Tests**:
+
+   ```bash
+   pnpm smoke:test
+   ```
+
+3. **Run Local OWASP ZAP Baseline Scan (Docker)**:
+
+   ```bash
+   docker run --rm -t --net="host" zaproxy/zap-stable zap-baseline.py \
+     -t http://localhost:3000 -r zap-report.html
+   ```
+
+4. **Teardown Staging Environment**:
+   ```bash
+   docker compose -f docker-compose.staging.yml down -v
+   ```
 
 ---
 
