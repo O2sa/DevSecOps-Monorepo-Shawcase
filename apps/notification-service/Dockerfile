@@ -1,6 +1,21 @@
 # ==============================================================================
-# Production Dockerfile for Express Notification Service (TypeScript)
+# Multi-stage Dockerfile for Express Notification Service (pnpm)
 # ==============================================================================
+
+# 1. Builder stage
+FROM node:20-alpine AS builder
+
+WORKDIR /app
+
+RUN npm install -g pnpm@10.29.2
+
+COPY package.json pnpm-lock.yaml tsconfig.json ./
+RUN pnpm install --frozen-lockfile
+
+COPY src ./src
+RUN pnpm run build
+
+# 2. Production runner stage
 FROM node:20-alpine AS runner
 
 WORKDIR /app
@@ -8,10 +23,13 @@ WORKDIR /app
 ENV NODE_ENV=production
 ENV PORT=8003
 
-# Copy application manifest, pre-built distribution, and dependencies
-COPY package*.json ./
-COPY --chown=node:node node_modules ./node_modules
-COPY --chown=node:node dist ./dist
+RUN npm install -g pnpm@10.29.2
+
+COPY package.json pnpm-lock.yaml ./
+RUN pnpm install --prod --frozen-lockfile
+
+# Copy compiled JavaScript output from builder stage
+COPY --from=builder --chown=node:node /app/dist ./dist
 
 # Security: Run as unprivileged node user
 USER node

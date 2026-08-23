@@ -1,3 +1,6 @@
+node_modules
+dist
+.angular
 .git
 .gitignore
 README.md
@@ -6,5 +9,3 @@ Dockerfile
 npm-debug.log
 .env
 .env.*
-node_modules
-.angular

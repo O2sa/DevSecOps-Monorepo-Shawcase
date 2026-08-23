@@ -1,6 +1,20 @@
 # ==============================================================================
-# Production Dockerfile for Spring Boot Orders Service
+# Multi-stage Dockerfile for Spring Boot Orders Service
 # ==============================================================================
+
+# 1. Build stage
+FROM maven:3.9-eclipse-temurin-21-alpine AS builder
+
+WORKDIR /build
+
+ENV MAVEN_OPTS="-Djava.net.preferIPv4Stack=true -Dmaven.wagon.http.retryHandler.count=5 -Dmaven.wagon.http.retryHandler.requestSentRetryEnabled=true"
+
+COPY pom.xml ./
+COPY src ./src
+
+RUN --mount=type=cache,target=/root/.m2 mvn clean package -DskipTests -B
+
+# 2. Production runner stage
 FROM eclipse-temurin:21-jre-alpine AS runner
 
 WORKDIR /app
@@ -10,7 +24,8 @@ ENV SERVER_PORT=8002
 # Security: Create non-root user
 RUN addgroup -S spring && adduser -S spring -G spring
 
-COPY --chown=spring:spring target/*.jar /app/app.jar
+# Copy generated JAR from builder stage
+COPY --from=builder --chown=spring:spring /build/target/*.jar /app/app.jar
 
 USER spring
 

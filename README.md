@@ -13,11 +13,11 @@ flowchart TD
     end
 
     subgraph Docker Network: devsecops-network
-        Web["Web Portal<br/>(Next.js 14 - Port 3000)"]
-        Dashboard["Admin Dashboard<br/>(Angular 18 / Nginx - Port 4200:8080)"]
+        Web["Web Portal<br/>(Next.js 14 / pnpm - Port 3000)"]
+        Dashboard["Admin Dashboard<br/>(Angular 18 / pnpm / Nginx - Port 4200:8080)"]
         Identity["Identity Service<br/>(Django 5 - Port 8001)"]
-        Orders["Orders Service<br/>(Spring Boot 3 - Port 8002)"]
-        Notify["Notification Service<br/>(Express + TypeScript - Port 8003)"]
+        Orders["Orders Service<br/>(Spring Boot 3 / Maven - Port 8002)"]
+        Notify["Notification Service<br/>(Express + TypeScript / pnpm - Port 8003)"]
         Volume[("Persistent Storage<br/>identity-data volume")]
     end
 
@@ -37,13 +37,13 @@ flowchart TD
 
 ## 📦 Applications & Port Matrix
 
-| Service | Application Directory | Technology Stack | Container Port | Host Port | Health Check Endpoint |
+| Service | Application Directory | Technology Stack & Package Manager | Container Port | Host Port | Health Check Endpoint |
 |---|---|---|---|---|---|
-| **`web`** | `apps/web` | Next.js 14 (React 18 / Node 20) | `3000` | `3000` | `http://localhost:3000` |
-| **`dashboard`** | `apps/dashboard` | Angular 18 (Unprivileged Nginx) | `8080` | `4200` | `http://localhost:4200/health.json` |
-| **`identity-service`** | `apps/identity-service` | Django 5 & Gunicorn (Python 3.11) | `8001` | `8001` | `http://localhost:8001/health` |
-| **`orders-service`** | `apps/orders-service` | Spring Boot 3 (Java 21 JRE) | `8002` | `8002` | `http://localhost:8002/health` |
-| **`notification-service`** | `apps/notification-service` | Express.js (Node 20 / TypeScript) | `8003` | `8003` | `http://localhost:8003/health` |
+| **`web`** | `apps/web` | Next.js 14 / React 18 (**pnpm**) | `3000` | `3000` | `http://localhost:3000/api/health` |
+| **`dashboard`** | `apps/dashboard` | Angular 18 (**pnpm** / Unprivileged Nginx) | `8080` | `4200` | `http://localhost:4200/health.json` |
+| **`identity-service`** | `apps/identity-service` | Django 5 & Gunicorn (Python 3.11 / pip) | `8001` | `8001` | `http://localhost:8001/health` |
+| **`orders-service`** | `apps/orders-service` | Spring Boot 3 (Java 21 JRE / Maven) | `8002` | `8002` | `http://localhost:8002/health` |
+| **`notification-service`** | `apps/notification-service` | Express.js / TypeScript (**pnpm**) | `8003` | `8003` | `http://localhost:8003/health` |
 
 ---
 
@@ -51,98 +51,41 @@ flowchart TD
 
 ### Prerequisites
 - Docker Engine 24.0+ and Docker Compose v2.20+ installed.
+- (Optional for local development outside Docker) Node.js 20+, `pnpm 10+`, Java 21+, Python 3.11+.
 
-### 1. Configure Environment
-Copy the environment configuration template:
+### 1. Clone & Configure Environment
+No pre-built host artifacts (such as `target/`, `node_modules/`, `dist/`, or `.next/`) are required. The entire stack builds deterministically inside Docker from source:
+
 ```bash
+git clone <repository>
+cd DevSecOps-Monorepo-Shawcase
 cp .env.example .env
 ```
 
-### 2. Build and Start All Containers
+### 2. Build & Launch Stack
 ```bash
-# Build and run in foreground
-docker compose up --build
-
-# Or run in detached background mode:
-docker compose up -d --build
+docker compose up --build -d
 ```
 
-### 3. Check Container Status and Health
+### 3. Verify Container Health
 ```bash
 docker compose ps
 ```
 
-### 4. Inspect Application Logs
-```bash
-# Follow all service logs
-docker compose logs -f
-
-# Follow specific service logs
-docker compose logs -f identity-service
-docker compose logs -f orders-service
-docker compose logs -f notification-service
-docker compose logs -f web
-docker compose logs -f dashboard
-```
-
-### 5. Stop the Stack
-```bash
-# Stop containers without removing persistent data
-docker compose down
-
-# Stop containers and REMOVE persistent volumes (Warning: resets database data)
-docker compose down -v
-```
+All 5 services should report `Up (healthy)`.
 
 ---
 
-## 🔑 Default Administrator Credentials
+## 🔒 Security & Best Practices
 
-When the Identity Service starts, the entrypoint script initializes the default superadmin account if not already present:
-
-- **Username**: `admin`
-- **Email**: `admin@devsecops.local`
-- **Password**: `AdminPassword123!`
-- **Role**: `admin`
-
----
-
-## 🛡️ Container Security & Hardening Baseline
-
-1. **Non-Root Execution**:
-   - `identity-service`: Runs as `appuser:appgroup` (`uid: 1001`).
-   - `orders-service`: Runs as `spring:spring`.
-   - `notification-service`: Runs as `node:node`.
-   - `web`: Runs as `nextjs:nodejs` (`uid: 1001`).
-   - `dashboard`: Runs as unprivileged Nginx worker (`nginxinc/nginx-unprivileged:alpine`).
-2. **Minimal Multi-Stage Builds**:
-   - Compilers, development toolchains, and build caches (`node_modules`, Maven `.m2`, temporary build trees) are pruned from final production images.
-3. **No New Privileges**:
-   - Every service is configured with `security_opt: ["no-new-privileges:true"]`.
-4. **Data Isolation**:
-   - SQLite persistent data is mounted in a dedicated named volume `identity-data` at `/app/data/` rather than modifying the immutable application filesystem.
-5. **CORS Governance**:
-   - Microservices restrict cross-origin browser requests to the configured frontend origins (`http://localhost:3000` and `http://localhost:4200`).
-
----
-
-## 🧪 Local Native Development (Without Docker)
-
-Developers can also run individual services natively:
-
-- **Identity Service**: `cd apps/identity-service && python manage.py runserver 8001`
-- **Orders Service**: `cd apps/orders-service && ./mvnw spring-boot:run`
-- **Notification Service**: `cd apps/notification-service && npm run dev`
-- **Web Portal**: `cd apps/web && npm run dev`
-- **Admin Dashboard**: `cd apps/dashboard && npm run dev`
-
----
-
-## 📖 Further Documentation
-
-- **[System Architecture & Data Flows](docs/architecture/system-overview.md)**
-- **[Identity Service Documentation](apps/identity-service/README.md)**
-- **[Orders Service Documentation](apps/orders-service/README.md)**
-- **[Notification Service Documentation](apps/notification-service/README.md)**
-- **[Web Portal Documentation](apps/web/README.md)**
-- **[Admin Dashboard Documentation](apps/dashboard/README.md)**
+- **Zero Host Artifact Dependency**: All compilation (Java bytecode, TypeScript, Next.js standalone, Angular production bundle) occurs strictly inside multi-stage Docker build stages.
+- **Fast & Deterministic Node Builds (`pnpm`)**: Node.js applications use `pnpm` with `--frozen-lockfile` ensuring content-addressable, strict dependency resolution and fast build times.
+- **Unprivileged Containers**:
+  - `identity-service`: Runs as `appuser:appgroup` (`uid: 1001`).
+  - `orders-service`: Runs as `spring:spring` (`uid: 1000`).
+  - `notification-service`: Runs as `node:node` (`uid: 1000`).
+  - `web`: Runs as `nextjs:nodejs` (`uid: 1001`).
+  - `dashboard`: Runs with `nginxinc/nginx-unprivileged:alpine` on non-root port `8080`.
+- **Stateless JWT Authentication**: HMAC-SHA256 tokens issued by Identity Service and verified independently across Orders and Notification services.
+- **Data Persistence**: SQLite database for identity service persisted via Docker named volume `identity-data`.
+- **Security Capabilities Dropped**: `security_opt: ["no-new-privileges:true"]` applied to all containers.

@@ -1,3 +1,6 @@
+node_modules
+.next
+coverage
 .git
 .gitignore
 README.md
@@ -6,4 +9,3 @@ Dockerfile
 npm-debug.log
 .env
 .env.*
-node_modules
