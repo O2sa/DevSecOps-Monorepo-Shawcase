@@ -1,189 +1,148 @@
-# DevSecOps Multi-Technology Proof-of-Concept Monorepo
+# DevSecOps Multi-Technology Showcase Monorepo
 
-Welcome to the **DevSecOps Proof-of-Concept (PoC) Monorepo**. This repository serves as a foundational platform designed to demonstrate a comprehensive, multi-stage DevSecOps lifecycle across a diverse polyglot microservice ecosystem.
-
-The business functionality of each application is intentionally minimal (health checks and foundational UI placeholders), keeping the focus entirely on clean architecture, security automation, CI/CD integration, and progressive DevSecOps hardening.
+Welcome to the **DevSecOps Showcase Monorepo**. This repository demonstrates a complete, production-minded polyglot microservice ecosystem orchestrated with Docker Compose, featuring five interconnected applications, stateless JWT authentication, role-based access control, cross-origin communication, and resilient service-to-service event dispatching.
 
 ---
 
 ## 🏛️ System Architecture
 
-The intended future communication model connects frontends directly to domain microservices rather than a sequential chain:
+```mermaid
+flowchart TD
+    subgraph Host / Browser Environment
+        Browser["User / Admin Web Browser"]
+    end
 
-```
-[ Public Users ]                                [ Admin / Ops Users ]
-       │                                                 │
-       ▼                                                 ▼
-┌──────────────┐                                 ┌────────────────┐
-│   Next.js    │                                 │    Angular     │
-│  (apps/web)  │                                 │(apps/dashboard)│
-│  Port: 3000  │                                 │   Port: 4200   │
-└──────┬───┬───┘                                 └───┬───┬────┬───┘
-       │   │                                         │   │    │
-       │   └─────────────────────────┐               │   │    │
-       │                             ▼               │   │    │
-       │                  ┌───────────────────────┐  │   │    │
-       │                  │   Identity Service    │◄─┘   │    │
-       │                  │(apps/identity-service)│      │    │
-       │                  │     Django (8001)     │      │    │
-       │                  └───────────────────────┘      │    │
-       │                                                 │    │
-       ▼                                                 │    │
-┌───────────────────────┐                                │    │
-│    Orders Service     │◄───────────────────────────────┘    │
-│ (apps/orders-service) │                                     │
-│   Spring Boot (8002)  │                                     │
-└──────────┬────────────┘                                     │
-           │                                                  │
-           │      ┌───────────────────────┐                   │
-           └─────►│ Notification Service  │◄──────────────────┘
-                  │(apps/notification-srv)│
-                  │     Express (8003)    │
-                  └───────────────────────┘
-```
+    subgraph Docker Network: devsecops-network
+        Web["Web Portal<br/>(Next.js 14 - Port 3000)"]
+        Dashboard["Admin Dashboard<br/>(Angular 18 / Nginx - Port 4200:8080)"]
+        Identity["Identity Service<br/>(Django 5 - Port 8001)"]
+        Orders["Orders Service<br/>(Spring Boot 3 - Port 8002)"]
+        Notify["Notification Service<br/>(Express + TypeScript - Port 8003)"]
+        Volume[("Persistent Storage<br/>identity-data volume")]
+    end
 
-*(Note: In Phase 1, the Identity Service APIs are implemented while remaining services operate with health probes. Cross-service integration will be established in Phase 2).*
+    %% Browser direct access via mapped host ports
+    Browser -->|"Public Storefront (Port 3000)"| Web
+    Browser -->|"Operations Console (Port 4200)"| Dashboard
+    Browser -->|"Direct Client API (CORS)"| Identity
+    Browser -->|"Direct Client API (CORS)"| Orders
+    Browser -->|"Direct Client API (CORS)"| Notify
 
----
-
-## 📁 Repository Structure
-
-```
-.
-├── apps/
-│   ├── web/                    # Public Web App (Next.js 14+)
-│   ├── dashboard/              # Internal Admin Dashboard (Angular 18+)
-│   ├── identity-service/       # Identity & Auth Service (Django 5.x)
-│   ├── orders-service/         # Product & Orders Service (Spring Boot 3.x)
-│   └── notification-service/   # Notification Service (Express 4.x)
-│
-├── infrastructure/
-│   ├── docker/                 # Local & dev Docker configurations
-│   ├── kubernetes/             # K8s manifests / Helm charts (Phase 8)
-│   └── terraform/              # Cloud IaC modules (Phase 9)
-│
-├── security/
-│   ├── policies/               # OPA, Kyverno, Semgrep security policies
-│   ├── scripts/                # DevSecOps scanning & automation hooks
-│   └── test-scenarios/         # DAST & security test suites (Phase 7)
-│
-├── docs/
-│   ├── architecture/           # System design & service catalog
-│   └── security/               # DevSecOps roadmap & security baselines
-│
-├── scripts/                    # Developer setup & maintenance scripts
-├── .github/
-│   └── workflows/              # CI/CD security pipelines (Phase 4-5)
-│
-├── docker-compose.yml          # Root multi-container orchestration
-├── CONTRIBUTING.md             # Development & contribution guidelines
-├── .editorconfig               # Cross-editor formatting standards
-├── .gitignore                  # Global polyglot ignore patterns
-└── README.md
+    %% Service-to-service internal Docker communication
+    Orders -->|"Internal Events (/internal/notifications)"| Notify
+    Identity -.->|"Stores SQLite db.sqlite3"| Volume
 ```
 
 ---
 
-## 🚀 Applications & Ports
+## 📦 Applications & Port Matrix
 
-| Application | Technology | Role | Port | Health Check |
-|---|---|---|---|---|
-| **`web`** | Next.js (Node 20+) | Public Client Landing & E-Commerce Portal | `3000` | `http://localhost:3000/api/health` |
-| **`dashboard`** | Angular 18 (Nginx) | Internal Admin & Operations Dashboard | `4200` | `http://localhost:4200/health.json` |
-| **`identity-service`** | Django 5 (Python 3.11+) | Identity, Authentication & RBAC | `8001` | `http://localhost:8001/health` |
-| **`orders-service`** | Spring Boot 3 (Java 21) | Products, Inventory & Order Lifecycle | `8002` | `http://localhost:8002/health` |
-| **`notification-service`** | Express.js (Node 20+) | Internal Alerts & Event Notifications | `8003` | `http://localhost:8003/health` |
+| Service | Application Directory | Technology Stack | Container Port | Host Port | Health Check Endpoint |
+|---|---|---|---|---|---|
+| **`web`** | `apps/web` | Next.js 14 (React 18 / Node 20) | `3000` | `3000` | `http://localhost:3000` |
+| **`dashboard`** | `apps/dashboard` | Angular 18 (Unprivileged Nginx) | `8080` | `4200` | `http://localhost:4200/health.json` |
+| **`identity-service`** | `apps/identity-service` | Django 5 & Gunicorn (Python 3.11) | `8001` | `8001` | `http://localhost:8001/health` |
+| **`orders-service`** | `apps/orders-service` | Spring Boot 3 (Java 21 JRE) | `8002` | `8002` | `http://localhost:8002/health` |
+| **`notification-service`** | `apps/notification-service` | Express.js (Node 20 / TypeScript) | `8003` | `8003` | `http://localhost:8003/health` |
 
 ---
 
-## ⚡ Quickstart: Running Locally
+## 🚀 Running the Stack with Docker Compose
 
-### Option 1: Docker Compose (All Services)
+### Prerequisites
+- Docker Engine 24.0+ and Docker Compose v2.20+ installed.
 
-To build and run all five applications simultaneously using containerized multi-stage builds:
-
+### 1. Configure Environment
+Copy the environment configuration template:
 ```bash
+cp .env.example .env
+```
+
+### 2. Build and Start All Containers
+```bash
+# Build and run in foreground
 docker compose up --build
+
+# Or run in detached background mode:
+docker compose up -d --build
 ```
 
-To stop all services:
+### 3. Check Container Status and Health
 ```bash
+docker compose ps
+```
+
+### 4. Inspect Application Logs
+```bash
+# Follow all service logs
+docker compose logs -f
+
+# Follow specific service logs
+docker compose logs -f identity-service
+docker compose logs -f orders-service
+docker compose logs -f notification-service
+docker compose logs -f web
+docker compose logs -f dashboard
+```
+
+### 5. Stop the Stack
+```bash
+# Stop containers without removing persistent data
 docker compose down
-```
 
-### Option 2: Running Applications Individually
-
-Each application is completely decoupled and runnable natively:
-
-#### 1. Next.js (`apps/web`)
-```bash
-cd apps/web
-npm install
-npm run dev
-# Open http://localhost:3000
-```
-
-#### 2. Angular (`apps/dashboard`)
-```bash
-cd apps/dashboard
-npm install
-npm start
-# Open http://localhost:4200
-```
-
-#### 3. Django Identity Service (`apps/identity-service`)
-```bash
-cd apps/identity-service
-python -m venv .venv
-# On Windows: .venv\Scripts\activate
-# On Linux/macOS: source .venv/bin/activate
-pip install -r requirements.txt
-python manage.py migrate
-python manage.py runserver 8001
-# Health: http://localhost:8001/health
-```
-
-#### 4. Spring Boot Orders Service (`apps/orders-service`)
-```bash
-cd apps/orders-service
-# On Windows:
-.\mvnw.cmd spring-boot:run
-# On Linux/macOS:
-./mvnw spring-boot:run
-# Health: http://localhost:8002/health
-```
-
-#### 5. Express Notification Service (`apps/notification-service`)
-```bash
-cd apps/notification-service
-npm install
-npm start
-# Health: http://localhost:8003/health
+# Stop containers and REMOVE persistent volumes (Warning: resets database data)
+docker compose down -v
 ```
 
 ---
 
-## 🛡️ DevSecOps Roadmap
+## 🔑 Default Administrator Credentials
 
-This repository is designed to be progressively evolved across 10 distinct DevSecOps maturity phases:
+When the Identity Service starts, the entrypoint script initializes the default superadmin account if not already present:
 
-1. **Phase 1: Monorepo Foundation & Scaffolding** *(Current)*
-2. **Phase 2: Application Functionality & Service-to-Service Integration**
-3. **Phase 3: Developer Security Controls (Pre-commit, Secret Detection, IDE Linting)**
-4. **Phase 4: Pull Request Security Checks (SAST, SCA, Semgrep, Dependency Scans)**
-5. **Phase 5: Build & Software Supply-Chain Security (SBOM generation, Cosign / SLSA provenance)**
-6. **Phase 6: Container Security (Trivy, Grype, Minimal Distroless/Alpine baselines)**
-7. **Phase 7: Staging Deployment & DAST (OWASP ZAP dynamic scanning)**
-8. **Phase 8: Kubernetes Security (OPA/Gatekeeper, Kyverno, NetworkPolicies, CIS Benchmarks)**
-9. **Phase 9: Terraform & Infrastructure-as-Code Security (Checkov, tfsec, Infracost)**
-10. **Phase 10: Runtime Security & Observability (Falco, OpenTelemetry, Prometheus, Grafana)**
+- **Username**: `admin`
+- **Email**: `admin@devsecops.local`
+- **Password**: `AdminPassword123!`
+- **Role**: `admin`
 
-For detailed specifications, see [`docs/security/devsecops-roadmap.md`](docs/security/devsecops-roadmap.md).
+---
+
+## 🛡️ Container Security & Hardening Baseline
+
+1. **Non-Root Execution**:
+   - `identity-service`: Runs as `appuser:appgroup` (`uid: 1001`).
+   - `orders-service`: Runs as `spring:spring`.
+   - `notification-service`: Runs as `node:node`.
+   - `web`: Runs as `nextjs:nodejs` (`uid: 1001`).
+   - `dashboard`: Runs as unprivileged Nginx worker (`nginxinc/nginx-unprivileged:alpine`).
+2. **Minimal Multi-Stage Builds**:
+   - Compilers, development toolchains, and build caches (`node_modules`, Maven `.m2`, temporary build trees) are pruned from final production images.
+3. **No New Privileges**:
+   - Every service is configured with `security_opt: ["no-new-privileges:true"]`.
+4. **Data Isolation**:
+   - SQLite persistent data is mounted in a dedicated named volume `identity-data` at `/app/data/` rather than modifying the immutable application filesystem.
+5. **CORS Governance**:
+   - Microservices restrict cross-origin browser requests to the configured frontend origins (`http://localhost:3000` and `http://localhost:4200`).
+
+---
+
+## 🧪 Local Native Development (Without Docker)
+
+Developers can also run individual services natively:
+
+- **Identity Service**: `cd apps/identity-service && python manage.py runserver 8001`
+- **Orders Service**: `cd apps/orders-service && ./mvnw spring-boot:run`
+- **Notification Service**: `cd apps/notification-service && npm run dev`
+- **Web Portal**: `cd apps/web && npm run dev`
+- **Admin Dashboard**: `cd apps/dashboard && npm run dev`
 
 ---
 
 ## 📖 Further Documentation
 
 - **[System Architecture & Data Flows](docs/architecture/system-overview.md)**
-- **[Service Catalog & Responsibilities](docs/architecture/service-catalog.md)**
-- **[Contributing Guide](CONTRIBUTING.md)**
+- **[Identity Service Documentation](apps/identity-service/README.md)**
+- **[Orders Service Documentation](apps/orders-service/README.md)**
+- **[Notification Service Documentation](apps/notification-service/README.md)**
+- **[Web Portal Documentation](apps/web/README.md)**
+- **[Admin Dashboard Documentation](apps/dashboard/README.md)**

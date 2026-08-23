@@ -1,6 +1,3 @@
-target/
-*.jar
-.mvn/wrapper/maven-wrapper.jar
 .git
 .gitignore
 README.md
@@ -9,3 +6,8 @@ Dockerfile
 .idea
 .vscode
 *.iml
+.mvn
+src
+pom.xml
+mvnw
+mvnw.cmd

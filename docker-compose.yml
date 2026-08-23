@@ -1,44 +1,5 @@
 services:
-  # 1. Public Client Application (Next.js)
-  web:
-    build:
-      context: ./apps/web
-      dockerfile: Dockerfile
-    container_name: devsecops-web
-    restart: unless-stopped
-    ports:
-      - "3000:3000"
-    environment:
-      - NODE_ENV=production
-      - PORT=3000
-    healthcheck:
-      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:3000/api/health || exit 1"]
-      interval: 15s
-      timeout: 5s
-      retries: 3
-      start_period: 10s
-    networks:
-      - devsecops-network
-
-  # 2. Admin / Operations Dashboard (Angular)
-  dashboard:
-    build:
-      context: ./apps/dashboard
-      dockerfile: Dockerfile
-    container_name: devsecops-dashboard
-    restart: unless-stopped
-    ports:
-      - "4200:8080"
-    healthcheck:
-      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:8080/health.json || exit 1"]
-      interval: 15s
-      timeout: 5s
-      retries: 3
-      start_period: 10s
-    networks:
-      - devsecops-network
-
-  # 3. Identity Service (Django)
+  # 1. Identity Service (Django)
   identity-service:
     build:
       context: ./apps/identity-service
@@ -46,44 +7,32 @@ services:
     container_name: devsecops-identity-service
     restart: unless-stopped
     ports:
-      - "8001:8001"
+      - "${IDENTITY_PORT:-8001}:8001"
     environment:
       - PYTHONUNBUFFERED=1
       - PORT=8001
-      - DJANGO_DEBUG=False
-      - DJANGO_SECRET_KEY=${DJANGO_SECRET_KEY:-django-insecure-docker-compose-poc-secret-key-change-in-prod}
+      - DJANGO_DEBUG=${DJANGO_DEBUG:-False}
+      - DJANGO_SECRET_KEY=${DJANGO_SECRET_KEY:-django-insecure-dev-only-secret-key-not-for-production}
       - DJANGO_ALLOWED_HOSTS=${DJANGO_ALLOWED_HOSTS:-localhost,127.0.0.1,identity-service,web,dashboard}
+      - CORS_ALLOWED_ORIGINS=${CORS_ALLOWED_ORIGINS:-http://localhost:3000,http://127.0.0.1:3000,http://localhost:4200,http://127.0.0.1:4200}
+      - DB_NAME=/app/data/db.sqlite3
+      - DJANGO_SUPERUSER_USERNAME=${DJANGO_SUPERUSER_USERNAME:-admin}
+      - DJANGO_SUPERUSER_EMAIL=${DJANGO_SUPERUSER_EMAIL:-admin@devsecops.local}
+      - DJANGO_SUPERUSER_PASSWORD=${DJANGO_SUPERUSER_PASSWORD:-AdminPassword123!}
+    volumes:
+      - identity-data:/app/data
+    security_opt:
+      - no-new-privileges:true
     healthcheck:
-      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:8001/health')\" || exit 1"]
-      interval: 15s
+      test: ["CMD-SHELL", "python -c \"import urllib.request, sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8001/health').getcode() == 200 else 1)\" || exit 1"]
+      interval: 10s
       timeout: 5s
       retries: 3
       start_period: 10s
     networks:
       - devsecops-network
 
-  # 4. Orders Service (Spring Boot)
-  orders-service:
-    build:
-      context: ./apps/orders-service
-      dockerfile: Dockerfile
-    container_name: devsecops-orders-service
-    restart: unless-stopped
-    ports:
-      - "8002:8002"
-    environment:
-      - SERVER_PORT=8002
-      - MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE=health,info
-    healthcheck:
-      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:8002/health || exit 1"]
-      interval: 20s
-      timeout: 5s
-      retries: 3
-      start_period: 25s
-    networks:
-      - devsecops-network
-
-  # 5. Notification Service (Express)
+  # 2. Notification Service (Express + TypeScript)
   notification-service:
     build:
       context: ./apps/notification-service
@@ -91,18 +40,110 @@ services:
     container_name: devsecops-notification-service
     restart: unless-stopped
     ports:
-      - "8003:8003"
+      - "${NOTIFICATION_PORT:-8003}:8003"
     environment:
       - NODE_ENV=production
       - PORT=8003
+      - JWT_SECRET=${DJANGO_SECRET_KEY:-django-insecure-dev-only-secret-key-not-for-production}
+      - CORS_ALLOWED_ORIGINS=${CORS_ALLOWED_ORIGINS:-http://localhost:3000,http://127.0.0.1:3000,http://localhost:4200,http://127.0.0.1:4200}
+    security_opt:
+      - no-new-privileges:true
     healthcheck:
-      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:8003/health || exit 1"]
-      interval: 15s
+      test: ["CMD-SHELL", "node -e \"const req = require('http').get('http://127.0.0.1:8003/health', (r) => process.exit(r.statusCode === 200 ? 0 : 1)); req.on('error', () => process.exit(1));\" || exit 1"]
+      interval: 10s
       timeout: 5s
       retries: 3
       start_period: 10s
     networks:
       - devsecops-network
+
+  # 3. Orders Service (Spring Boot)
+  orders-service:
+    build:
+      context: ./apps/orders-service
+      dockerfile: Dockerfile
+    container_name: devsecops-orders-service
+    restart: unless-stopped
+    ports:
+      - "${ORDERS_PORT:-8002}:8002"
+    environment:
+      - SERVER_PORT=8002
+      - DJANGO_SECRET_KEY=${DJANGO_SECRET_KEY:-django-insecure-dev-only-secret-key-not-for-production}
+      - NOTIFICATION_SERVICE_URL=http://notification-service:8003
+      - CORS_ALLOWED_ORIGINS=${CORS_ALLOWED_ORIGINS:-http://localhost:3000,http://127.0.0.1:3000,http://localhost:4200,http://127.0.0.1:4200}
+      - MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE=health,info
+    depends_on:
+      identity-service:
+        condition: service_healthy
+      notification-service:
+        condition: service_healthy
+    security_opt:
+      - no-new-privileges:true
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://127.0.0.1:8002/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 25s
+    networks:
+      - devsecops-network
+
+  # 4. Public Client Application (Next.js Web Portal)
+  web:
+    build:
+      context: ./apps/web
+      dockerfile: Dockerfile
+    container_name: devsecops-web
+    restart: unless-stopped
+    ports:
+      - "${WEB_PORT:-3000}:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+    depends_on:
+      identity-service:
+        condition: service_healthy
+      orders-service:
+        condition: service_healthy
+    security_opt:
+      - no-new-privileges:true
+    healthcheck:
+      test: ["CMD-SHELL", "node -e \"const req = require('http').get('http://127.0.0.1:3000/api/health', (r) => process.exit(r.statusCode === 200 ? 0 : 1)); req.on('error', () => process.exit(1));\" || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+    networks:
+      - devsecops-network
+
+  # 5. Admin / Operations Dashboard (Angular)
+  dashboard:
+    build:
+      context: ./apps/dashboard
+      dockerfile: Dockerfile
+    container_name: devsecops-dashboard
+    restart: unless-stopped
+    ports:
+      - "${DASHBOARD_PORT:-4200}:8080"
+    depends_on:
+      identity-service:
+        condition: service_healthy
+      orders-service:
+        condition: service_healthy
+    security_opt:
+      - no-new-privileges:true
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://127.0.0.1:8080/health.json || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    networks:
+      - devsecops-network
+
+volumes:
+  identity-data:
+    driver: local
 
 networks:
   devsecops-network:
