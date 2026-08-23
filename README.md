@@ -86,38 +86,74 @@ Commit Accepted (or Blocked with actionable diagnostics)
 
 Automated security verification and regression testing run on every Pull Request and Push to `main` via GitHub Actions (`.github/workflows/ci.yml`):
 
+- **Quality & Formatting**: Prettier format check and Next.js ESLint.
+- **Secret Detection Scan**: Defense-in-depth Gitleaks v2 scanner checking git history and repository diffs.
+- **Application Tests**: Automated Jest, Django (27 tests), and Spring Boot JUnit 5 (28 tests) execution.
+- **Build Validation**: Typechecking and production bundle compilation for all applications.
+- **SAST (Static Application Security Testing)**: Semgrep multi-language vulnerability analysis.
+- **Dependency Security (SCA)**: Trivy filesystem vulnerability audit and automated daily Dependabot PRs.
+
+---
+
+## 🔐 Secure Build & Software Supply Chain (Shift-Left Gate 3)
+
+Trusted builds on `main` and release tags (`v*.*.*`) execute the secure artifact packaging pipeline (`.github/workflows/secure-build.yml`):
+
 ```
-Pull Request / Push to main
+Push to main / Release Tag
     ↓
-GitHub Actions Matrix Pipeline
-    ├── 1. Code Quality & Formatting (Prettier & ESLint)
-    ├── 2. Secret Detection Scan (Gitleaks + Local Scanner)
-    ├── 3. Node.js Apps Test & Build (Web, Dashboard, Notification)
-    ├── 4. Python Django Service Test & Build (27 Unit/Integration Tests)
-    ├── 5. Java Spring Boot Service Test & Build (28 JUnit Tests & JAR Package)
-    ├── 6. Semgrep SAST Scan (Multi-Language: Java, Python, JS, TS)
-    ├── 7. Trivy Dependency Vulnerability Scan (SCA: npm, pip, Maven)
-    └── 8. Consolidated CI Security Summary
+Docker Buildx (Multi-Image Build from Source)
     ↓
-Pull Request Merge Gate
+Publish to GitHub Container Registry (GHCR)
+    ↓
+Extract Immutable Image Digest (@sha256:...)
+    ├── 1. Generate SPDX SBOM via Syft (anchore/sbom-action)
+    ├── 2. Attest SBOM to GHCR Image (actions/attest-sboms)
+    ├── 3. Attest SLSA Build Provenance (actions/attest-build-provenance)
+    └── 4. Keyless Image Signing with Sigstore Cosign (OIDC Token)
 ```
 
-### CI Security Gates & Policies
+### 1. Published Container Images
 
-| Gate / Job               | Scanner / Tool                        | Scope / Ecosystem                               | Blocking Policy                                  |
-| ------------------------ | ------------------------------------- | ----------------------------------------------- | ------------------------------------------------ |
-| **Quality & Formatting** | Prettier & ESLint                     | TypeScript, JavaScript, Python                  | Fails on syntax or formatting error              |
-| **Secret Scan**          | Gitleaks v2 + scripts/scan-secrets.js | Entire git history & repo                       | Fails on detected secrets                        |
-| **Application Tests**    | Jest, Django Test, JUnit 5            | All 5 applications                              | Fails if any test fails                          |
-| **Build Validation**     | Next.js, Angular CLI, Maven, tsc      | TypeScript, Java bytecode                       | Fails on compilation error                       |
-| **SAST**                 | Semgrep (OWASP Top 10 + custom rules) | Python, Java, JS, TS                            | Fails on ERROR/CRITICAL findings                 |
-| **Dependency Scanning**  | Trivy (FS mode) + Dependabot          | `pnpm-lock.yaml`, `requirements.txt`, `pom.xml` | Logs SCA findings table, daily Dependabot alerts |
+| Application          | Container Registry URI                                  |
+| -------------------- | ------------------------------------------------------- |
+| Identity Service     | `ghcr.io/<owner>/devsecops-identity-service:latest`     |
+| Orders Service       | `ghcr.io/<owner>/devsecops-orders-service:latest`       |
+| Notification Service | `ghcr.io/<owner>/devsecops-notification-service:latest` |
+| Web Portal           | `ghcr.io/<owner>/devsecops-web:latest`                  |
+| Admin Dashboard      | `ghcr.io/<owner>/devsecops-dashboard:latest`            |
 
-### GitHub Actions Security Practices
+### 2. Verifying Image Signatures with Cosign
 
-- **Least Privilege**: Workflows run with default `permissions: contents: read` and scoped `security-events: write` for SARIF upload.
-- **Dependency Caching**: Utilizes native caching for `pnpm` store, `pip` wheel cache, and Maven `.m2` repository.
-- **Action Version Pinning**: Uses trusted actions pinned to stable major versions (`@v4`, `@v5`).
+Images are signed keylessly using GitHub Actions OIDC identity. Verify any image digest using Cosign:
+
+```bash
+cosign verify \
+  --certificate-identity-regexp "https://github.com/O2sa/DevSecOps-Monorepo-Shawcase/.*" \
+  --certificate-oidc-issuer "https://token.actions.githubusercontent.com" \
+  ghcr.io/o2sa/devsecops-identity-service:latest
+```
+
+### 3. Verifying Build Provenance Attestations
+
+Verify cryptographic provenance and tamper-resistance using the GitHub CLI:
+
+```bash
+gh attestation verify \
+  oci://ghcr.io/o2sa/devsecops-identity-service:latest \
+  --repo O2sa/DevSecOps-Monorepo-Shawcase
+```
+
+### 4. Inspecting Software Bills of Materials (SBOM)
+
+Download and inspect the attested SPDX SBOM directly:
+
+```bash
+gh attestation verify \
+  oci://ghcr.io/o2sa/devsecops-identity-service:latest \
+  --repo O2sa/DevSecOps-Monorepo-Shawcase \
+  --format json | jq '.[] | select(.predicateType | contains("spdx"))'
+```
 
 ---
 

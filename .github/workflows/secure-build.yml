@@ -1,0 +1,136 @@
+name: 'Secure Build & Supply Chain'
+
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - 'v*.*.*'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+  id-token: write
+  attestations: write
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build-and-sign-images:
+    name: 'Build, Attest & Sign Container Images'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        service:
+          - name: 'identity-service'
+            context: './apps/identity-service'
+            file: './apps/identity-service/Dockerfile'
+            image: 'devsecops-identity-service'
+
+          - name: 'orders-service'
+            context: './apps/orders-service'
+            file: './apps/orders-service/Dockerfile'
+            image: 'devsecops-orders-service'
+
+          - name: 'notification-service'
+            context: './apps/notification-service'
+            file: './apps/notification-service/Dockerfile'
+            image: 'devsecops-notification-service'
+
+          - name: 'web'
+            context: './apps/web'
+            file: './apps/web/Dockerfile'
+            image: 'devsecops-web'
+
+          - name: 'dashboard'
+            context: './apps/dashboard'
+            file: './apps/dashboard/Dockerfile'
+            image: 'devsecops-dashboard'
+
+    steps:
+      # 1. Checkout repository source code
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
+      # 2. Setup Sigstore Cosign for keyless OIDC container signing
+      - name: Install Cosign
+        uses: sigstore/cosign-installer@v3.5.0
+
+      # 3. Setup Docker Buildx with GHA caching support
+      - name: Setup Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      # 4. Authenticate to GitHub Container Registry (GHCR)
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # 5. Extract metadata, tags, and labels for the container image
+      - name: Extract Docker Image Metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository_owner }}/${{ matrix.service.image }}
+          tags: |
+            type=raw,value=latest,enable={{is_default_branch}}
+            type=sha,prefix=sha-,format=short
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+
+      # 6. Build and push image to GHCR from pure source code
+      - name: Build and Push Image to GHCR
+        id: build-push
+        uses: docker/build-push-action@v5
+        with:
+          context: ${{ matrix.service.context }}
+          file: ${{ matrix.service.file }}
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      # 7. Generate Software Bill of Materials (SBOM) in SPDX JSON format via Syft
+      - name: Generate SPDX SBOM
+        uses: anchore/sbom-action@v0
+        with:
+          image: ghcr.io/${{ github.repository_owner }}/${{ matrix.service.image }}@${{ steps.build-push.outputs.digest }}
+          format: spdx-json
+          output-file: ${{ matrix.service.name }}-sbom.spdx.json
+
+      # 8. Upload generated SBOM as GitHub Actions build artifact
+      - name: Upload SBOM Build Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.service.name }}-sbom
+          path: ${{ matrix.service.name }}-sbom.spdx.json
+
+      # 9. Cryptographically attest SBOM to the immutable container image digest
+      - name: Attest SBOM to Container Image
+        uses: actions/attest-sboms@v1
+        with:
+          subject-name: ghcr.io/${{ github.repository_owner }}/${{ matrix.service.image }}
+          subject-digest: ${{ steps.build-push.outputs.digest }}
+          sbom-path: ${{ matrix.service.name }}-sbom.spdx.json
+          push-to-registry: true
+
+      # 10. Generate SLSA Build Provenance Attestation
+      - name: Attest Build Provenance
+        uses: actions/attest-build-provenance@v1
+        with:
+          subject-name: ghcr.io/${{ github.repository_owner }}/${{ matrix.service.image }}
+          subject-digest: ${{ steps.build-push.outputs.digest }}
+          push-to-registry: true
+
+      # 11. Sign container image digest using Sigstore Cosign with Keyless OIDC
+      - name: Sign Container Image Digest (Keyless OIDC)
+        run: |
+          echo "Signing immutable image digest: ghcr.io/${{ github.repository_owner }}/${{ matrix.service.image }}@${{ steps.build-push.outputs.digest }}"
+          cosign sign --yes "ghcr.io/${{ github.repository_owner }}/${{ matrix.service.image }}@${{ steps.build-push.outputs.digest }}"
