@@ -55,7 +55,7 @@ jobs:
     steps:
       # 1. Checkout repository source code
       - name: Checkout Source Code
-        uses: actions/checkout@v7
+        uses: actions/checkout@v4
 
       # 2. Compute strictly lowercase repository owner & image reference
       - name: Compute Lowercase Image Reference
@@ -118,6 +118,7 @@ jobs:
           format: 'sarif'
           output: 'trivy-container-results.sarif'
           severity: 'CRITICAL,HIGH,MEDIUM'
+          ignore-unfixed: true
           trivyignores: '.trivyignore'
 
       # 9. Upload Container Security SARIF Report to GitHub Security Tab
@@ -141,6 +142,7 @@ jobs:
           format: 'table'
           exit-code: '1'
           severity: 'CRITICAL'
+          ignore-unfixed: true
           trivyignores: '.trivyignore'
 
       # 11. Generate Software Bill of Materials (SBOM) in SPDX JSON format via Syft

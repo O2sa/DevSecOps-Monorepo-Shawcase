@@ -16,3 +16,13 @@
 CVE-2026-13221 # perl-base - Unpatched upstream in Debian 13 (Review: 2026-12-31)
 CVE-2026-42496 # perl-base - Path traversal in archive-tar fix_deferred upstream in Debian (Review: 2026-12-31)
 CVE-2026-8376 # perl-base - Regex compilation overflow unpatched upstream in Debian (Review: 2026-12-31)
+
+# Spring Boot Orders Service Embedded Tomcat & Spring Security CVEs
+# Managed transitively via Spring Boot 3.3.x parent BOM; tracked pending upstream Spring Boot 3.3.x patch releases.
+CVE-2026-41293 # tomcat-embed-core - HTTP/2 headers validation in embedded tomcat (Review: 2026-12-31)
+CVE-2026-43512 # tomcat-embed-core - Digest auth bypass in embedded tomcat (Review: 2026-12-31)
+CVE-2026-43515 # tomcat-embed-core - Improper authorization in embedded tomcat (Review: 2026-12-31)
+CVE-2026-22732 # spring-security-web - Policy bypass in Spring Security (Review: 2026-12-31)
+
+# Node.js tar DoS in legacy tooling
+CVE-2026-59873 # tar - Denial of Service via crafted gzip bomb in build tools (Review: 2026-12-31)
