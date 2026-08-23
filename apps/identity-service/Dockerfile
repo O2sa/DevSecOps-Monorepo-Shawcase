@@ -8,10 +8,12 @@ WORKDIR /app
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 ENV PORT=8001
+ENV HOME=/app
+ENV TMPDIR=/tmp
 
 # Security: Create non-root user and persistent data directory
 RUN addgroup --system --gid 1001 appgroup && \
-    adduser --system --uid 1001 --gid 1001 --no-create-home appuser && \
+    adduser --system --uid 1001 --gid 1001 --home /app appuser && \
     mkdir -p /app/data && \
     chown -R appuser:appgroup /app
 
@@ -22,7 +24,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY --chown=appuser:appgroup . .
 
 RUN chmod +x /app/docker-entrypoint.sh && \
-    chown -R appuser:appgroup /app/data
+    chown -R appuser:appgroup /app
 
 USER appuser
 

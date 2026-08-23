@@ -71,22 +71,25 @@ jobs:
           echo "Starting isolated staging environment from trusted images..."
           docker compose -f docker-compose.staging.yml up -d
 
-      # 7. Application Readiness Verification (Poll health checks with timeout)
+      # 7. Application Readiness Verification (Poll HTTP endpoints directly with timeout)
       - name: Wait for Application Readiness
         timeout-minutes: 3
         run: |
-          echo "Waiting for all 5 services to become healthy..."
+          echo "Waiting for all 5 staging services to respond on health endpoints..."
           for i in {1..30}; do
-            HEALTHY_COUNT=$(docker compose -f docker-compose.staging.yml ps --filter "health=healthy" -q | wc -l)
-            echo "Healthy services: ${HEALTHY_COUNT}/5 (Attempt ${i}/30)"
-            if [ "$HEALTHY_COUNT" -eq 5 ]; then
-              echo "✅ All 5 staging services are healthy and ready!"
+            if curl -sf http://localhost:8001/health > /dev/null && \
+               curl -sf http://localhost:8002/health > /dev/null && \
+               curl -sf http://localhost:8003/health > /dev/null && \
+               curl -sf http://localhost:3000/api/health > /dev/null && \
+               curl -sf http://localhost:4200/health.json > /dev/null; then
+              echo "✅ All 5 staging services are healthy and responding!"
               docker compose -f docker-compose.staging.yml ps
               exit 0
             fi
+            echo "Waiting for services... (Attempt ${i}/30)"
             sleep 5
           done
-          echo "❌ Timed out waiting for containers to become healthy. Container diagnostics:"
+          echo "❌ Timed out waiting for services to become ready. Container diagnostics:"
           docker compose -f docker-compose.staging.yml ps
           docker compose -f docker-compose.staging.yml logs
           exit 1
