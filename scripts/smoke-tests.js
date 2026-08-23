@@ -1,23 +1,19 @@
-#!/usr/bin/env node
-
-/**
- * DevSecOps Monorepo - Staging Smoke Test Suite
- *
- * Validates system availability, service communication, and stateless JWT authentication
- * against running staging containers before initiating Dynamic Application Security Testing (DAST).
- */
+// ==============================================================================
+// DevSecOps Pre-DAST Automated Smoke Testing Suite
+// Validates service health, frontend entry points, and end-to-end JWT auth flows.
+// ==============================================================================
 
 const BASE_URLS = {
-  web: process.env.STAGING_WEB_URL || 'http://localhost:3000',
-  dashboard: process.env.STAGING_DASHBOARD_URL || 'http://localhost:4200',
-  identity: process.env.STAGING_IDENTITY_URL || 'http://localhost:8001',
-  orders: process.env.STAGING_ORDERS_URL || 'http://localhost:8002',
-  notifications: process.env.STAGING_NOTIFICATIONS_URL || 'http://localhost:8003',
+  identity: process.env.IDENTITY_SERVICE_URL || 'http://localhost:8001',
+  orders: process.env.ORDERS_SERVICE_URL || 'http://localhost:8002',
+  notifications: process.env.NOTIFICATION_SERVICE_URL || 'http://localhost:8003',
+  web: process.env.WEB_URL || 'http://localhost:3000',
+  dashboard: process.env.DASHBOARD_URL || 'http://localhost:4200',
 };
 
 const TEST_USER = {
-  username: `smoke_test_${Date.now()}`,
-  email: `smoke_${Date.now()}@devsecops.local`,
+  username: `smoke_test_${Date.now().toString().slice(-6)}`,
+  email: `smoketest_${Date.now().toString().slice(-6)}@devsecops.local`,
   password: 'SmokeTestSecurePassword123!',
 };
 
@@ -42,7 +38,7 @@ async function checkEndpoint(name, url, options = {}, expectedStatus = 200) {
       return null;
     }
   } catch (err) {
-    console.error(`  ❌ [FAIL] ${name} (${url}) -> Network error: ${err.message}`);
+    console.error(`  ❌ [FAIL] ${name} (${url}) -> Request Error: ${err.message}`);
     failedCount++;
     return null;
   }
@@ -53,7 +49,7 @@ async function runSmokeTests() {
   console.log('🚀 [DevSecOps Staging] Executing Pre-DAST Smoke Tests');
   console.log('======================================================\n');
 
-  // 1. Service Health Endpoints
+  // 1. Health Checks
   console.log('1. Validating Microservice Health Endpoints:');
   await checkEndpoint('Identity Service Health', `${BASE_URLS.identity}/health`);
   await checkEndpoint('Orders Service Health', `${BASE_URLS.orders}/health`);
@@ -61,7 +57,7 @@ async function runSmokeTests() {
   await checkEndpoint('Web Portal Health', `${BASE_URLS.web}/api/health`);
   await checkEndpoint('Dashboard Health', `${BASE_URLS.dashboard}/health.json`);
 
-  // 2. Web & Dashboard Frontends
+  // 2. Frontend Entry Points
   console.log('\n2. Validating Frontend Entry Points:');
   await checkEndpoint('Web Portal UI', `${BASE_URLS.web}/`);
   await checkEndpoint('Admin Dashboard UI', `${BASE_URLS.dashboard}/`);
@@ -70,7 +66,7 @@ async function runSmokeTests() {
   console.log('\n3. Validating Authentication & JWT Token Issuance:');
   let token = null;
   try {
-    const regRes = await fetch(`${BASE_URLS.identity}/api/auth/register/`, {
+    const regRes = await fetch(`${BASE_URLS.identity}/api/auth/register`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(TEST_USER),
@@ -84,6 +80,30 @@ async function runSmokeTests() {
         `  ✅ [PASS] User Registration (${TEST_USER.username}) -> HTTP 201 (JWT Acquired)`
       );
       passedCount++;
+    } else if (regRes.status === 400) {
+      // User already exists, fallback to login
+      const loginRes = await fetch(`${BASE_URLS.identity}/api/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          username: TEST_USER.username,
+          password: TEST_USER.password,
+        }),
+        signal: AbortSignal.timeout(10000),
+      });
+      if (loginRes.status === 200) {
+        const loginData = await loginRes.json();
+        token = loginData.tokens ? loginData.tokens.access : loginData.access;
+        console.log(
+          `  ✅ [PASS] User Login Fallback (${TEST_USER.username}) -> HTTP 200 (JWT Acquired)`
+        );
+        passedCount++;
+      } else {
+        console.error(
+          `  ❌ [FAIL] Registration/Login fallback failed -> HTTP ${regRes.status} / ${loginRes.status}`
+        );
+        failedCount++;
+      }
     } else {
       console.error(`  ❌ [FAIL] User Registration failed -> HTTP ${regRes.status}`);
       failedCount++;
