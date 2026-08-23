@@ -163,13 +163,10 @@ jobs:
           java-version: '21'
           cache: 'maven'
 
-      - name: Grant Execute Permissions to Maven Wrapper
-        run: chmod +x apps/orders-service/mvnw
-
       - name: Run Spring Boot Tests & Build JAR Package
         run: |
           cd apps/orders-service
-          ./mvnw clean test package -B
+          mvn clean test package -B
 
   # ============================================================================
   # 6. Static Application Security Testing (SAST)
@@ -207,12 +204,24 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
+      - name: Setup Java 21 & Cache Maven Dependencies
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+          cache: 'maven'
+
+      - name: Resolve Maven Dependencies into Local Cache
+        run: |
+          cd apps/orders-service
+          mvn dependency:resolve -B || true
+
       - name: Run Trivy Filesystem Dependency Scanner
         uses: aquasecurity/trivy-action@master
         with:
           scan-type: 'fs'
           scan-ref: '.'
-          vuln-type: 'library'
+          scanners: 'vuln'
           severity: 'CRITICAL,HIGH'
           exit-code: '0' # Non-blocking in baseline, logs full findings table
           format: 'table'

@@ -81,6 +81,7 @@ staticfiles/
 # Java / Maven / Gradle (Spring Boot)
 target/
 *.jar
+!**/maven-wrapper.jar
 *.war
 *.nar
 *.ear
