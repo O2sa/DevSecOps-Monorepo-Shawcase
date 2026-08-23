@@ -11,3 +11,8 @@
 # <CVE-ID> # <Package> - <Justification> (Review: YYYY-MM-DD)
 # ==============================================================================
 
+# Debian 13 base image unpatched upstream perl-base issues (Status: fix_deferred / affected by Debian Security Team)
+# Identity service runs purely on Python Gunicorn/Django; perl binaries are unused in application execution.
+CVE-2026-13221 # perl-base - Unpatched upstream in Debian 13 (Review: 2026-12-31)
+CVE-2026-42496 # perl-base - Path traversal in archive-tar fix_deferred upstream in Debian (Review: 2026-12-31)
+CVE-2026-8376 # perl-base - Regex compilation overflow unpatched upstream in Debian (Review: 2026-12-31)
