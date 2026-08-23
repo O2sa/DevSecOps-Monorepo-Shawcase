@@ -7,7 +7,8 @@
     "dev": "node ./node_modules/@angular/cli/bin/ng.js serve --port 4200 --host 0.0.0.0",
     "start": "node ./node_modules/@angular/cli/bin/ng.js serve --port 4200 --host 0.0.0.0",
     "build": "node ./node_modules/@angular/cli/bin/ng.js build --configuration production",
-    "watch": "node ./node_modules/@angular/cli/bin/ng.js build --watch --configuration development"
+    "watch": "node ./node_modules/@angular/cli/bin/ng.js build --watch --configuration development",
+    "test": "jest --passWithNoTests"
   },
   "dependencies": {
     "@angular/animations": "^18.0.0",

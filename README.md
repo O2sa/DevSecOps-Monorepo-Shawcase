@@ -1,6 +1,6 @@
 # DevSecOps Multi-Technology Showcase Monorepo
 
-Welcome to the **DevSecOps Showcase Monorepo**. This repository demonstrates a complete, production-minded polyglot microservice ecosystem orchestrated with Docker Compose, featuring five interconnected applications, stateless JWT authentication, role-based access control, cross-origin communication, resilient service-to-service event dispatching, and Shift-Left Developer Security Gates.
+Welcome to the **DevSecOps Showcase Monorepo**. This repository demonstrates a complete, production-minded polyglot microservice ecosystem orchestrated with Docker Compose, featuring five interconnected applications, stateless JWT authentication, role-based access control, cross-origin communication, resilient service-to-service event dispatching, and Shift-Left DevSecOps Security Gates.
 
 ---
 
@@ -69,15 +69,7 @@ Git Hooks (Husky)
 Commit Accepted (or Blocked with actionable diagnostics)
 ```
 
-### 1. Setup & Installation
-
-Git hooks are automatically configured upon dependency installation:
-
-```bash
-pnpm install
-```
-
-### 2. Developer Commands
+### Developer Commands
 
 | Command                      | Purpose                                                                          |
 | ---------------------------- | -------------------------------------------------------------------------------- |
@@ -88,44 +80,52 @@ pnpm install
 | `pnpm scan:secrets`          | Runs full-workspace secret scanning                                              |
 | `pnpm scan:secrets --staged` | Scans only staged files (executed by `pre-commit` hook)                          |
 
-### 3. Secret Scanning Policy
+---
 
-The secret scanner scans staged files for:
+## 🚀 CI / Pull Request Security Pipeline (Shift-Left Gate 2)
 
-- AWS Access Keys & Secrets
-- Private Keys (RSA, EC, OPENSSH, PGP)
-- GitHub Tokens & Slack Webhooks
-- JWT Tokens & High-Entropy API Keys
-- Hardcoded Password Assignments
-
-Allowlists for documentation templates and test mock fixtures are maintained strictly in `security/policies/secrets-allowlist.json`.
-
-### 4. Commit Message Convention
-
-Commit messages are strictly validated via **commitlint** against the Conventional Commits standard:
+Automated security verification and regression testing run on every Pull Request and Push to `main` via GitHub Actions (`.github/workflows/ci.yml`):
 
 ```
-<type>(<scope>): <subject>
+Pull Request / Push to main
+    ↓
+GitHub Actions Matrix Pipeline
+    ├── 1. Code Quality & Formatting (Prettier & ESLint)
+    ├── 2. Secret Detection Scan (Gitleaks + Local Scanner)
+    ├── 3. Node.js Apps Test & Build (Web, Dashboard, Notification)
+    ├── 4. Python Django Service Test & Build (27 Unit/Integration Tests)
+    ├── 5. Java Spring Boot Service Test & Build (28 JUnit Tests & JAR Package)
+    ├── 6. Semgrep SAST Scan (Multi-Language: Java, Python, JS, TS)
+    ├── 7. Trivy Dependency Vulnerability Scan (SCA: npm, pip, Maven)
+    └── 8. Consolidated CI Security Summary
+    ↓
+Pull Request Merge Gate
 ```
 
-- **Valid Types**: `feat`, `fix`, `sec`, `security`, `docs`, `chore`, `refactor`, `test`, `style`, `build`, `ci`, `perf`, `revert`
-- **Valid Scopes**: `web`, `dashboard`, `identity`, `orders`, `notifications`, `git-hooks`, `infra`, `security`, `root`
-- **Examples**:
-  - `feat(identity): add token refresh endpoint`
-  - `fix(orders): prevent negative order quantity`
-  - `sec(git-hooks): add staged secret scanning gate`
+### CI Security Gates & Policies
+
+| Gate / Job               | Scanner / Tool                        | Scope / Ecosystem                               | Blocking Policy                                  |
+| ------------------------ | ------------------------------------- | ----------------------------------------------- | ------------------------------------------------ |
+| **Quality & Formatting** | Prettier & ESLint                     | TypeScript, JavaScript, Python                  | Fails on syntax or formatting error              |
+| **Secret Scan**          | Gitleaks v2 + scripts/scan-secrets.js | Entire git history & repo                       | Fails on detected secrets                        |
+| **Application Tests**    | Jest, Django Test, JUnit 5            | All 5 applications                              | Fails if any test fails                          |
+| **Build Validation**     | Next.js, Angular CLI, Maven, tsc      | TypeScript, Java bytecode                       | Fails on compilation error                       |
+| **SAST**                 | Semgrep (OWASP Top 10 + custom rules) | Python, Java, JS, TS                            | Fails on ERROR/CRITICAL findings                 |
+| **Dependency Scanning**  | Trivy (FS mode) + Dependabot          | `pnpm-lock.yaml`, `requirements.txt`, `pom.xml` | Logs SCA findings table, daily Dependabot alerts |
+
+### GitHub Actions Security Practices
+
+- **Least Privilege**: Workflows run with default `permissions: contents: read` and scoped `security-events: write` for SARIF upload.
+- **Dependency Caching**: Utilizes native caching for `pnpm` store, `pip` wheel cache, and Maven `.m2` repository.
+- **Action Version Pinning**: Uses trusted actions pinned to stable major versions (`@v4`, `@v5`).
 
 ---
 
-## 🚀 Running the Stack with Docker Compose
-
-### Prerequisites
-
-- Docker Engine 24.0+ and Docker Compose v2.20+ installed.
+## 🐳 Running the Stack with Docker Compose
 
 ### 1. Clone & Configure Environment
 
-No pre-built host artifacts (such as `target/`, `node_modules/`, `dist/`, or `.next/`) are required. The entire stack builds deterministically inside Docker from source:
+No pre-built host artifacts are required. The entire stack builds deterministically inside Docker from source:
 
 ```bash
 git clone <repository>
