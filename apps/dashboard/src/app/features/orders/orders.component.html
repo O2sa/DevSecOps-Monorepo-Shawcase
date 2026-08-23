@@ -1,0 +1,162 @@
+<div class="orders-page">
+  <div class="card">
+    <div class="card-header">
+      <div>
+        <h1>Orders Management</h1>
+        <p class="subtitle">
+          Administrative inspection and status lifecycle transitions for all customer orders.
+        </p>
+      </div>
+      <button
+        type="button"
+        class="btn btn-outline btn-sm"
+        (click)="fetchOrders()"
+        [disabled]="isLoading"
+      >
+        🔄 Refresh Orders
+      </button>
+    </div>
+
+    @if (errorMessage) {
+      <div class="alert alert-error">
+        <span>{{ errorMessage }}</span>
+      </div>
+    }
+
+    @if (successMessage) {
+      <div class="alert alert-success">
+        <span>{{ successMessage }}</span>
+      </div>
+    }
+
+    <!-- Status Filter Tabs -->
+    <div class="tab-row">
+      <button
+        type="button"
+        class="tab-btn"
+        [class.active]="activeFilter === 'ALL'"
+        (click)="setFilter('ALL')"
+      >
+        All Orders ({{ orders.length }})
+      </button>
+      <button
+        type="button"
+        class="tab-btn"
+        [class.active]="activeFilter === 'PENDING'"
+        (click)="setFilter('PENDING')"
+      >
+        ⏳ Pending
+      </button>
+      <button
+        type="button"
+        class="tab-btn"
+        [class.active]="activeFilter === 'PROCESSING'"
+        (click)="setFilter('PROCESSING')"
+      >
+        ⚙️ Processing
+      </button>
+      <button
+        type="button"
+        class="tab-btn"
+        [class.active]="activeFilter === 'COMPLETED'"
+        (click)="setFilter('COMPLETED')"
+      >
+        ✓ Completed
+      </button>
+    </div>
+
+    @if (isLoading) {
+      <div class="loading-state">
+        <div class="spinner"></div>
+        <p>Loading system orders from Orders Service...</p>
+      </div>
+    } @else if (filteredOrders.length === 0) {
+      <div class="empty-state">
+        <div class="empty-icon">📦</div>
+        <h3>No Orders Found</h3>
+        <p class="subtitle">No orders match the selected filter category.</p>
+      </div>
+    } @else {
+      <div class="table-container">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Order ID</th>
+              <th>Customer ID</th>
+              <th>Product Details</th>
+              <th>Quantity</th>
+              <th>Total Amount</th>
+              <th>Current Status</th>
+              <th>Order Date</th>
+              <th>Admin Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (order of filteredOrders; track order.id) {
+              <tr>
+                <td>
+                  <strong>#{{ order.id }}</strong>
+                </td>
+                <td>
+                  <span class="user-tag">User #{{ order.userId }}</span>
+                </td>
+                <td>
+                  <div><strong>{{ order.product.name }}</strong></div>
+                  <div style="font-size: 0.75rem; color: var(--text-muted);">
+                    Unit Price: ${{ (order.product.price || 0).toFixed(2) }}
+                  </div>
+                </td>
+                <td>{{ order.quantity }}</td>
+                <td>
+                  <strong style="color: var(--accent-cyan);">
+                    ${{ ((order.product.price || 0) * order.quantity).toFixed(2) }}
+                  </strong>
+                </td>
+                <td>
+                  @if (order.status === 'COMPLETED') {
+                    <span class="badge badge-completed">✓ Completed</span>
+                  } @else if (order.status === 'PROCESSING') {
+                    <span class="badge badge-processing">⚙️ Processing</span>
+                  } @else {
+                    <span class="badge badge-pending">⏳ Pending</span>
+                  }
+                </td>
+                <td style="color: var(--text-muted); font-size: 0.8rem;">
+                  {{ order.createdAt | date:'medium' }}
+                </td>
+                <td>
+                  <div class="action-cell">
+                    <select
+                      class="status-select"
+                      [ngModel]="selectedStatuses[order.id]"
+                      (ngModelChange)="onStatusChange(order.id, $event)"
+                      [disabled]="updatingOrderId === order.id"
+                      aria-label="Select order status"
+                    >
+                      @for (st of availableStatuses; track st) {
+                        <option [value]="st">{{ st }}</option>
+                      }
+                    </select>
+
+                    <button
+                      type="button"
+                      class="btn btn-primary btn-sm"
+                      (click)="updateStatus(order)"
+                      [disabled]="updatingOrderId === order.id || selectedStatuses[order.id] === order.status"
+                    >
+                      @if (updatingOrderId === order.id) {
+                        Saving...
+                      } @else {
+                        Update
+                      }
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </div>
+</div>

@@ -1,0 +1,86 @@
+<div class="products-page">
+  <div class="card">
+    <div class="card-header">
+      <div>
+        <h1>Products Catalog</h1>
+        <p class="subtitle">
+          Product items and catalog inventory served directly by the Spring Boot Orders Service.
+        </p>
+      </div>
+      <button
+        type="button"
+        class="btn btn-outline btn-sm"
+        (click)="fetchProductsAndAnalytics()"
+        [disabled]="isLoading"
+      >
+        🔄 Refresh Catalog
+      </button>
+    </div>
+
+    @if (errorMessage) {
+      <div class="alert alert-error">
+        <span>{{ errorMessage }}</span>
+      </div>
+    }
+
+    <div class="alert alert-info">
+      <span>
+        ℹ️ <strong>Operational Architecture Notice</strong>: Product catalog data is seeded in-memory and read-only. Direct product creation and deletion APIs are intentionally reserved for Phase 2 backend catalog enhancements.
+      </span>
+    </div>
+
+    @if (isLoading) {
+      <div class="loading-state">
+        <div class="spinner"></div>
+        <p>Loading product catalog from Orders Service...</p>
+      </div>
+    } @else if (products.length === 0) {
+      <div class="empty-state">
+        <div class="empty-icon">🛍️</div>
+        <h3>No Products Available</h3>
+        <p class="subtitle">No catalog items were returned by the Orders Service.</p>
+      </div>
+    } @else {
+      <div class="table-container">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Product ID</th>
+              <th>Product Name</th>
+              <th>Unit Price</th>
+              <th>Units Ordered</th>
+              <th>Availability</th>
+              <th>Service Source</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (product of products; track product.id) {
+              <tr>
+                <td><strong>#{{ product.id }}</strong></td>
+                <td>
+                  <strong>{{ product.name }}</strong>
+                </td>
+                <td>
+                  <strong style="color: var(--accent-cyan);">
+                    ${{ product.price.toFixed(2) }}
+                  </strong>
+                </td>
+                <td>
+                  <span class="badge badge-processing">
+                    {{ productOrderCounts[product.id] || 0 }} units
+                  </span>
+                </td>
+                <td>
+                  <span class="badge badge-success">● Active</span>
+                </td>
+                <td style="color: var(--text-muted); font-size: 0.85rem;">
+                  Spring Boot (Port 8002)
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </div>
+</div>

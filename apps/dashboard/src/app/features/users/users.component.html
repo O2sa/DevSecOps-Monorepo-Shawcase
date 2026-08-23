@@ -1,0 +1,78 @@
+<div class="users-page">
+  <div class="card">
+    <div class="card-header">
+      <div>
+        <h1>User Directory & RBAC Audit</h1>
+        <p class="subtitle">
+          Registered user accounts and permission role assignments from the Django Identity Service.
+        </p>
+      </div>
+      <button
+        type="button"
+        class="btn btn-outline btn-sm"
+        (click)="fetchUsers()"
+        [disabled]="isLoading"
+      >
+        🔄 Refresh Directory
+      </button>
+    </div>
+
+    @if (errorMessage) {
+      <div class="alert alert-error">
+        <span>{{ errorMessage }}</span>
+      </div>
+    }
+
+    @if (isLoading) {
+      <div class="loading-state">
+        <div class="spinner"></div>
+        <p>Loading user accounts from Identity Service...</p>
+      </div>
+    } @else if (users.length === 0) {
+      <div class="empty-state">
+        <div class="empty-icon">👥</div>
+        <h3>No Users Found</h3>
+        <p class="subtitle">No user records were returned by the Identity Service.</p>
+      </div>
+    } @else {
+      <div class="table-container">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>User ID</th>
+              <th>Username</th>
+              <th>Email Address</th>
+              <th>Role</th>
+              <th>Permissions Summary</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (user of users; track user.id) {
+              <tr>
+                <td><strong>#{{ user.id }}</strong></td>
+                <td>
+                  <strong>{{ user.username }}</strong>
+                </td>
+                <td>{{ user.email || 'N/A' }}</td>
+                <td>
+                  @if (user.role === 'admin' || user.is_admin) {
+                    <span class="badge badge-completed">👑 Admin</span>
+                  } @else {
+                    <span class="badge badge-processing">👤 User</span>
+                  }
+                </td>
+                <td style="color: var(--text-muted); font-size: 0.85rem;">
+                  @if (user.role === 'admin' || user.is_admin) {
+                    <span>Full Control (Orders, Status Transitions, Directory Audit)</span>
+                  } @else {
+                    <span>Standard Access (Product Catalog, Personal Orders)</span>
+                  }
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </div>
+</div>

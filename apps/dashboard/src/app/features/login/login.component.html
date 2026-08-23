@@ -1,0 +1,68 @@
+<div class="login-container">
+  <div class="card login-card">
+    <div class="login-header">
+      <div class="brand-badge" style="margin-bottom: 0.5rem;">CONTROL PLANE</div>
+      <h1>Administrator Sign In</h1>
+      <p class="subtitle">
+        Enter your administrative credentials to access the DevSecOps Operations Dashboard.
+      </p>
+    </div>
+
+    @if (errorMessage) {
+      <div class="alert alert-error">
+        <span>{{ errorMessage }}</span>
+      </div>
+    }
+
+    <form (ngSubmit)="onSubmit()">
+      <div class="form-group">
+        <label class="form-label" for="username">Username</label>
+        <input
+          id="username"
+          type="text"
+          name="username"
+          class="form-input"
+          [(ngModel)]="username"
+          placeholder="Admin username"
+          autocomplete="username"
+          required
+          [disabled]="isLoading"
+        />
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="password">Password</label>
+        <input
+          id="password"
+          type="password"
+          name="password"
+          class="form-input"
+          [(ngModel)]="password"
+          placeholder="Admin password"
+          autocomplete="current-password"
+          required
+          [disabled]="isLoading"
+        />
+      </div>
+
+      <button
+        type="submit"
+        class="btn btn-primary"
+        style="width: 100%; margin-top: 0.5rem;"
+        [disabled]="isLoading"
+      >
+        @if (isLoading) {
+          Authenticating...
+        } @else {
+          Sign In to Dashboard &rarr;
+        }
+      </button>
+    </form>
+
+    <div class="login-footer">
+      <small style="color: var(--text-muted);">
+        🔒 Authentication verified with Django Identity Service via stateless JWT.
+      </small>
+    </div>
+  </div>
+</div>

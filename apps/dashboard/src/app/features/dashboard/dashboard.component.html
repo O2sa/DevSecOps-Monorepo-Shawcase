@@ -1,0 +1,141 @@
+<div class="dashboard-page">
+  <div class="card">
+    <div class="card-header">
+      <div>
+        <h1>Operational Control Center</h1>
+        <p class="subtitle">
+          Real-time metrics and administration across the DevSecOps microservices ecosystem.
+        </p>
+      </div>
+      <button
+        type="button"
+        class="btn btn-outline btn-sm"
+        (click)="loadDashboardData()"
+        [disabled]="isLoading"
+      >
+        🔄 Refresh Metrics
+      </button>
+    </div>
+
+    @if (errorMessage) {
+      <div class="alert alert-error">
+        <span>{{ errorMessage }}</span>
+      </div>
+    }
+
+    @if (isLoading) {
+      <div class="loading-state">
+        <div class="spinner"></div>
+        <p>Loading control center metrics...</p>
+      </div>
+    } @else {
+      <!-- Key Operational Metrics Grid -->
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-label">Total System Orders</div>
+          <div class="stat-value">{{ orders.length }}</div>
+          <div class="stat-sub">Across all registered users</div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-label">Total Revenue</div>
+          <div class="stat-value" style="color: var(--accent-cyan);">${{ totalRevenue.toFixed(2) }}</div>
+          <div class="stat-sub">Gross order volume</div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-label">Pending / Processing</div>
+          <div class="stat-value" style="color: var(--warning);">
+            {{ pendingCount }} <span style="font-size: 1rem; color: var(--text-muted);">/</span> {{ processingCount }}
+          </div>
+          <div class="stat-sub">Awaiting fulfillment</div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-label">Registered Accounts</div>
+          <div class="stat-value" style="color: var(--accent-blue);">{{ users.length }}</div>
+          <div class="stat-sub">Django Identity Service</div>
+        </div>
+      </div>
+
+      <!-- Quick Action Cards -->
+      <div class="actions-grid" style="margin: 2rem 0;">
+        <div class="action-card">
+          <div class="action-icon">📦</div>
+          <h3>Order Operations</h3>
+          <p>Inspect system-wide customer orders and transition lifecycle statuses.</p>
+          <a routerLink="/orders" class="btn btn-primary btn-sm">Manage Orders &rarr;</a>
+        </div>
+
+        <div class="action-card">
+          <div class="action-icon">🛍️</div>
+          <h3>Product Catalog</h3>
+          <p>View active product catalog items served by Spring Boot Orders Service.</p>
+          <a routerLink="/products" class="btn btn-outline btn-sm">View Catalog &rarr;</a>
+        </div>
+
+        <div class="action-card">
+          <div class="action-icon">👥</div>
+          <h3>User Directory</h3>
+          <p>Audit registered user accounts, assigned roles, and email addresses.</p>
+          <a routerLink="/users" class="btn btn-outline btn-sm">Audit Users &rarr;</a>
+        </div>
+      </div>
+
+      <!-- Recent Orders Section -->
+      <div class="section-container" style="margin-top: 2rem;">
+        <div class="card-header">
+          <h2>Recent Order Activity</h2>
+          <a routerLink="/orders" style="color: var(--accent-cyan); text-decoration: none; font-size: 0.85rem; font-weight: 600;">
+            View All {{ orders.length }} Orders &rarr;
+          </a>
+        </div>
+
+        @if (recentOrders.length === 0) {
+          <div class="empty-state">
+            <p>No orders placed in the system yet.</p>
+          </div>
+        } @else {
+          <div class="table-container">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Order ID</th>
+                  <th>Customer ID</th>
+                  <th>Product</th>
+                  <th>Qty</th>
+                  <th>Total</th>
+                  <th>Status</th>
+                  <th>Created Date</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (order of recentOrders; track order.id) {
+                  <tr>
+                    <td><strong>#{{ order.id }}</strong></td>
+                    <td>User #{{ order.userId }}</td>
+                    <td>{{ order.product.name }}</td>
+                    <td>{{ order.quantity }}</td>
+                    <td><strong style="color: var(--accent-cyan);">${{ ((order.product.price || 0) * order.quantity).toFixed(2) }}</strong></td>
+                    <td>
+                      @if (order.status === 'COMPLETED') {
+                        <span class="badge badge-completed">✓ Completed</span>
+                      } @else if (order.status === 'PROCESSING') {
+                        <span class="badge badge-processing">⚙️ Processing</span>
+                      } @else {
+                        <span class="badge badge-pending">⏳ Pending</span>
+                      }
+                    </td>
+                    <td style="color: var(--text-muted); font-size: 0.8rem;">
+                      {{ order.createdAt | date:'medium' }}
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
+      </div>
+    }
+  </div>
+</div>
