@@ -114,7 +114,7 @@ jobs:
 
       # 9. Cryptographically attest SBOM to the immutable container image digest
       - name: Attest SBOM to Container Image
-        uses: actions/attest-sboms@v1
+        uses: actions/attest-sbom@v1
         with:
           subject-name: ghcr.io/${{ github.repository_owner }}/${{ matrix.service.image }}
           subject-digest: ${{ steps.build-push.outputs.digest }}
