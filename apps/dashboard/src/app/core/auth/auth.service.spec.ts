@@ -8,8 +8,14 @@ import { environment } from '../../../environments/environment';
 describe('AuthService', () => {
   let service: AuthService;
   let httpMock: HttpTestingController;
-  let storageSpy: jasmine.SpyObj<AuthStorageService>;
-  let routerSpy: jasmine.SpyObj<Router>;
+  let storageMock: {
+    getAccessToken: jest.Mock;
+    setAccessToken: jest.Mock;
+    getRefreshToken: jest.Mock;
+    setRefreshToken: jest.Mock;
+    clear: jest.Mock;
+  };
+  let routerMock: { navigate: jest.Mock };
 
   // Helper to create valid base64 payload JWT
   const createMockToken = (payload: object) => {
@@ -19,28 +25,26 @@ describe('AuthService', () => {
   };
 
   beforeEach(() => {
-    const sSpy = jasmine.createSpyObj('AuthStorageService', [
-      'getAccessToken',
-      'setAccessToken',
-      'getRefreshToken',
-      'setRefreshToken',
-      'clear',
-    ]);
-    const rSpy = jasmine.createSpyObj('Router', ['navigate']);
+    storageMock = {
+      getAccessToken: jest.fn(),
+      setAccessToken: jest.fn(),
+      getRefreshToken: jest.fn(),
+      setRefreshToken: jest.fn(),
+      clear: jest.fn(),
+    };
+    routerMock = { navigate: jest.fn() };
 
     TestBed.configureTestingModule({
       imports: [HttpClientTestingModule],
       providers: [
         AuthService,
-        { provide: AuthStorageService, useValue: sSpy },
-        { provide: Router, useValue: rSpy },
+        { provide: AuthStorageService, useValue: storageMock },
+        { provide: Router, useValue: routerMock },
       ],
     });
 
     service = TestBed.inject(AuthService);
     httpMock = TestBed.inject(HttpTestingController);
-    storageSpy = TestBed.inject(AuthStorageService) as jasmine.SpyObj<AuthStorageService>;
-    routerSpy = TestBed.inject(Router) as jasmine.SpyObj<Router>;
   });
 
   afterEach(() => {
@@ -64,21 +68,25 @@ describe('AuthService', () => {
 
     service.login({ username: 'admin', password: 'Password123!' }).subscribe((res) => {
       expect(res.access).toBe(token);
+      expect(service.isAuthenticated()).toBe(true);
+      expect(service.isAdmin()).toBe(true);
+      expect(service.currentUser()?.username).toBe('admin');
+      expect(service.currentUser()?.role).toBe('admin');
     });
 
     const req = httpMock.expectOne(`${environment.identityServiceUrl}/api/auth/login`);
     expect(req.request.method).toBe('POST');
-    req.flush({ access: token, refresh: 'refresh-token' });
+    req.flush({
+      access: token,
+      refresh: 'mock-refresh-token',
+    });
 
-    expect(storageSpy.setAccessToken).toHaveBeenCalledWith(token);
-    expect(service.currentUser()?.username).toBe('admin');
-    expect(service.currentUser()?.role).toBe('admin');
-    expect(service.isAuthenticated()).toBeTrue();
-    expect(service.isAdmin()).toBeTrue();
+    expect(storageMock.setAccessToken).toHaveBeenCalledWith(token);
+    expect(storageMock.setRefreshToken).toHaveBeenCalledWith('mock-refresh-token');
   });
 
-  it('should decode regular user token and reflect non-admin status', () => {
-    const userPayload = {
+  it('should reject non-admin users attempting to log into operations dashboard', () => {
+    const regularUserPayload = {
       user_id: 2,
       username: 'regular_user',
       email: 'user@devsecops.local',
@@ -86,25 +94,31 @@ describe('AuthService', () => {
       is_admin: false,
       exp: Math.floor(Date.now() / 1000) + 3600,
     };
-    const token = createMockToken(userPayload);
+    const token = createMockToken(regularUserPayload);
 
-    service.login({ username: 'regular_user', password: 'Password123!' }).subscribe();
+    service.login({ username: 'regular_user', password: 'Password123!' }).subscribe({
+      next: () => fail('Expected login to fail for non-admin user'),
+      error: (err) => {
+        expect(err.message).toContain('Access denied. Administrator privileges required');
+        expect(service.isAuthenticated()).toBe(false);
+        expect(service.isAdmin()).toBe(false);
+      },
+    });
 
     const req = httpMock.expectOne(`${environment.identityServiceUrl}/api/auth/login`);
-    req.flush({ access: token });
-
-    expect(service.currentUser()?.role).toBe('user');
-    expect(service.isAuthenticated()).toBeTrue();
-    expect(service.isAdmin()).toBeFalse();
+    req.flush({
+      access: token,
+      refresh: 'mock-refresh-token',
+    });
   });
 
-  it('should clear authentication state and redirect on logout', () => {
+  it('should clear stored credentials on logout and navigate to /login', () => {
     service.logout();
 
-    expect(storageSpy.clear).toHaveBeenCalled();
+    expect(storageMock.clear).toHaveBeenCalled();
+    expect(service.isAuthenticated()).toBe(false);
+    expect(service.isAdmin()).toBe(false);
     expect(service.currentUser()).toBeNull();
-    expect(service.isAuthenticated()).toBeFalse();
-    expect(service.isAdmin()).toBeFalse();
-    expect(routerSpy.navigate).toHaveBeenCalledWith(['/login']);
+    expect(routerMock.navigate).toHaveBeenCalledWith(['/login']);
   });
 });

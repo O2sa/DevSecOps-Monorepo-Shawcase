@@ -8,14 +8,17 @@ import { environment } from '../../../environments/environment';
 describe('authInterceptor', () => {
   let httpClient: HttpClient;
   let httpMock: HttpTestingController;
-  let authServiceSpy: jasmine.SpyObj<AuthService>;
+  let authServiceMock: { getToken: jest.Mock; logout: jest.Mock };
 
   beforeEach(() => {
-    authServiceSpy = jasmine.createSpyObj('AuthService', ['getToken', 'logout']);
+    authServiceMock = {
+      getToken: jest.fn(),
+      logout: jest.fn(),
+    };
 
     TestBed.configureTestingModule({
       providers: [
-        { provide: AuthService, useValue: authServiceSpy },
+        { provide: AuthService, useValue: authServiceMock },
         provideHttpClient(withInterceptors([authInterceptor])),
         provideHttpClientTesting(),
       ],
@@ -30,32 +33,32 @@ describe('authInterceptor', () => {
   });
 
   it('should attach Authorization header for backend microservices when token is available', () => {
-    authServiceSpy.getToken.and.returnValue('mock-admin-jwt-token');
+    authServiceMock.getToken.mockReturnValue('mock-admin-jwt-token');
 
     httpClient.get(`${environment.ordersServiceUrl}/api/orders`).subscribe();
 
     const req = httpMock.expectOne(`${environment.ordersServiceUrl}/api/orders`);
-    expect(req.request.headers.has('Authorization')).toBeTrue();
+    expect(req.request.headers.has('Authorization')).toBe(true);
     expect(req.request.headers.get('Authorization')).toBe('Bearer mock-admin-jwt-token');
     req.flush([]);
   });
 
   it('should NOT attach Authorization header to external third-party requests', () => {
-    authServiceSpy.getToken.and.returnValue('mock-admin-jwt-token');
+    authServiceMock.getToken.mockReturnValue('mock-admin-jwt-token');
 
     httpClient.get('https://api.thirdparty.com/external-resource').subscribe();
 
     const req = httpMock.expectOne('https://api.thirdparty.com/external-resource');
-    expect(req.request.headers.has('Authorization')).toBeFalse();
+    expect(req.request.headers.has('Authorization')).toBe(false);
     req.flush({});
   });
 
   it('should call authService.logout() on 401 Unauthorized from backend service', () => {
-    authServiceSpy.getToken.and.returnValue('expired-token');
+    authServiceMock.getToken.mockReturnValue('expired-token');
 
     httpClient.get(`${environment.ordersServiceUrl}/api/orders`).subscribe({
       error: () => {
-        expect(authServiceSpy.logout).toHaveBeenCalled();
+        expect(authServiceMock.logout).toHaveBeenCalled();
       },
     });
 

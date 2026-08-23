@@ -4,45 +4,48 @@ import { adminGuard } from './admin.guard';
 import { AuthService } from './auth.service';
 
 describe('adminGuard', () => {
-  let authServiceSpy: jasmine.SpyObj<AuthService>;
+  let authServiceMock: { isAdmin: jest.Mock; isAuthenticated: jest.Mock };
   let router: Router;
 
   const mockRoute = {} as ActivatedRouteSnapshot;
   const mockState = { url: '/dashboard' } as RouterStateSnapshot;
 
   beforeEach(() => {
-    authServiceSpy = jasmine.createSpyObj('AuthService', ['isAdmin', 'isAuthenticated']);
+    authServiceMock = {
+      isAdmin: jest.fn(),
+      isAuthenticated: jest.fn(),
+    };
 
     TestBed.configureTestingModule({
-      providers: [{ provide: AuthService, useValue: authServiceSpy }],
+      providers: [{ provide: AuthService, useValue: authServiceMock }],
     });
 
     router = TestBed.inject(Router);
   });
 
   it('should allow route activation for authenticated administrators', () => {
-    authServiceSpy.isAdmin.and.returnValue(true);
+    authServiceMock.isAdmin.mockReturnValue(true);
 
     const result = TestBed.runInInjectionContext(() => adminGuard(mockRoute, mockState));
-    expect(result).toBeTrue();
+    expect(result).toBe(true);
   });
 
   it('should redirect unauthenticated users to /login with returnUrl', () => {
-    authServiceSpy.isAdmin.and.returnValue(false);
-    authServiceSpy.isAuthenticated.and.returnValue(false);
+    authServiceMock.isAdmin.mockReturnValue(false);
+    authServiceMock.isAuthenticated.mockReturnValue(false);
 
     const result = TestBed.runInInjectionContext(() => adminGuard(mockRoute, mockState));
-    expect(result instanceof UrlTree).toBeTrue();
+    expect(result instanceof UrlTree).toBe(true);
     const tree = result as UrlTree;
     expect(tree.toString()).toContain('/login?returnUrl=%2Fdashboard');
   });
 
   it('should redirect non-admin authenticated users with forbidden error param', () => {
-    authServiceSpy.isAdmin.and.returnValue(false);
-    authServiceSpy.isAuthenticated.and.returnValue(true);
+    authServiceMock.isAdmin.mockReturnValue(false);
+    authServiceMock.isAuthenticated.mockReturnValue(true);
 
     const result = TestBed.runInInjectionContext(() => adminGuard(mockRoute, mockState));
-    expect(result instanceof UrlTree).toBeTrue();
+    expect(result instanceof UrlTree).toBe(true);
     const tree = result as UrlTree;
     expect(tree.toString()).toContain('/login?error=forbidden');
   });
