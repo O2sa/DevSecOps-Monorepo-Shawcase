@@ -12,10 +12,7 @@ export class ApiError extends Error {
   }
 }
 
-export async function apiClient<T>(
-  url: string,
-  options: RequestInit = {}
-): Promise<T> {
+export async function apiClient<T>(url: string, options: RequestInit = {}): Promise<T> {
   const headers = new Headers(options.headers || {});
 
   // Automatically attach Bearer token if present and not already specified

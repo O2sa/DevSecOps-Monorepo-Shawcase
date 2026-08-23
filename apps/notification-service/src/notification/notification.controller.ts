@@ -14,7 +14,11 @@ export class NotificationController {
     }
   };
 
-  getUnreadNotifications = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  getUnreadNotifications = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> => {
     try {
       const userId = req.user!.id;
       const notifications = await this.service.getUserUnreadNotifications(userId);

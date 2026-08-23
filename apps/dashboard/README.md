@@ -7,6 +7,7 @@ Internal administrative and operational control plane built with **Angular 18**,
 ## 🎯 1. Application Purpose
 
 The **Admin Dashboard** is an internal operations portal for platform administrators. It provides:
+
 - **Operational Metrics**: Real-time aggregation of orders, gross revenue, inventory, and registered accounts.
 - **Order Lifecycle Management**: Administrative inspection of all customer orders across users with interactive lifecycle status transitions (`PENDING` &rarr; `PROCESSING` &rarr; `COMPLETED`).
 - **Product Catalog Inspection**: Product catalog viewer connecting to the Spring Boot Orders Service.
@@ -54,6 +55,7 @@ The **Admin Dashboard** is an internal operations portal for platform administra
 ## 🔐 4. Authentication, Roles & Token Handling
 
 ### Authentication Flow
+
 1. Administrator enters credentials on `/login`.
 2. `IdentityApiService.login()` calls `POST http://localhost:8001/api/auth/login`.
 3. The Identity Service issues an HMAC-SHA256 JWT containing claims: `user_id`, `username`, `email`, `role`, and `is_admin`.
@@ -63,12 +65,14 @@ The **Admin Dashboard** is an internal operations portal for platform administra
 7. Authorized administrators are redirected to `/dashboard`.
 
 ### HTTP Interceptor (`authInterceptor`)
+
 - Automatically intercepts outgoing requests matching configured backend service URLs (`http://localhost:8001`, `http://localhost:8002`, `http://localhost:8003`).
 - Injects `Authorization: Bearer <token>`.
 - Does **not** attach authentication tokens to third-party or external domains.
 - Automatically handles `401 Unauthorized` responses by clearing authentication state and redirecting to `/login`.
 
 ### Route Guard (`adminGuard`)
+
 - Protects all administrative routes (`/dashboard`, `/orders`, `/products`, `/users`).
 - Redirects unauthenticated users to `/login?returnUrl=...`.
 - Redirects non-admin authenticated users to `/login?error=forbidden`.
@@ -77,13 +81,13 @@ The **Admin Dashboard** is an internal operations portal for platform administra
 
 ## 📄 5. Implemented Routes & Features
 
-| Route | Component | Access | Description |
-|---|---|---|---|
-| `/login` | `LoginComponent` | Public | Administrator login form with role validation and error display |
+| Route        | Component            | Access     | Description                                                                   |
+| ------------ | -------------------- | ---------- | ----------------------------------------------------------------------------- |
+| `/login`     | `LoginComponent`     | Public     | Administrator login form with role validation and error display               |
 | `/dashboard` | `DashboardComponent` | Admin Only | Operational metrics (Orders, Revenue, Status Breakdown, Users, Recent Orders) |
-| `/orders` | `OrdersComponent` | Admin Only | System-wide order table, status filtering, and interactive status updates |
-| `/products` | `ProductsComponent` | Admin Only | Product catalog inventory, unit prices, and order unit counts |
-| `/users` | `UsersComponent` | Admin Only | User directory table with role badges and account permissions |
+| `/orders`    | `OrdersComponent`    | Admin Only | System-wide order table, status filtering, and interactive status updates     |
+| `/products`  | `ProductsComponent`  | Admin Only | Product catalog inventory, unit prices, and order unit counts                 |
+| `/users`     | `UsersComponent`     | Admin Only | User directory table with role badges and account permissions                 |
 
 ---
 
@@ -116,22 +120,27 @@ export const environment = {
 ## 🚀 8. How to Run Locally
 
 ### Prerequisites
+
 - Node.js 18+ (tested with Node.js 20/24)
 - Backend services running on ports `8001`, `8002`, and `8003`
 
 ### Start Development Server
+
 ```bash
 cd apps/dashboard
 npm run dev
 # or
 npm start
 ```
+
 The dashboard will be available at [http://localhost:4200](http://localhost:4200).
 
 ### Build Production Bundle
+
 ```bash
 npm run build
 ```
+
 The compiled production bundle is generated in `dist/devsecops-dashboard/browser/`.
 
 ---

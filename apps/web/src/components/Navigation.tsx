@@ -62,7 +62,10 @@ export function Navigation() {
                 <Link href="/orders" className={`nav-link ${isActive('/orders') ? 'active' : ''}`}>
                   My Orders
                 </Link>
-                <Link href="/notifications" className={`nav-link ${isActive('/notifications') ? 'active' : ''}`}>
+                <Link
+                  href="/notifications"
+                  className={`nav-link ${isActive('/notifications') ? 'active' : ''}`}
+                >
                   Notifications
                   {unreadCount > 0 && <span className="notification-badge">{unreadCount}</span>}
                 </Link>
@@ -85,10 +88,16 @@ export function Navigation() {
             </div>
           ) : (
             <div className="auth-buttons">
-              <Link href="/login" className={`btn btn-outline btn-sm ${isActive('/login') ? 'active' : ''}`}>
+              <Link
+                href="/login"
+                className={`btn btn-outline btn-sm ${isActive('/login') ? 'active' : ''}`}
+              >
                 Log In
               </Link>
-              <Link href="/register" className={`btn btn-primary btn-sm ${isActive('/register') ? 'active' : ''}`}>
+              <Link
+                href="/register"
+                className={`btn btn-primary btn-sm ${isActive('/register') ? 'active' : ''}`}
+              >
                 Register
               </Link>
             </div>

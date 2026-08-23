@@ -14,9 +14,7 @@ describe('adminGuard', () => {
     authServiceSpy = jasmine.createSpyObj('AuthService', ['isAdmin', 'isAuthenticated']);
 
     TestBed.configureTestingModule({
-      providers: [
-        { provide: AuthService, useValue: authServiceSpy }
-      ]
+      providers: [{ provide: AuthService, useValue: authServiceSpy }],
     });
 
     router = TestBed.inject(Router);

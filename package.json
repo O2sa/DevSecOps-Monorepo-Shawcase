@@ -1,0 +1,22 @@
+{
+  "name": "devsecops-monorepo",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "prepare": "husky",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "lint": "pnpm --filter devsecops-web lint && node scripts/lint-python.js",
+    "lint:all": "pnpm -r --if-present lint",
+    "lint:python": "node scripts/lint-python.js",
+    "scan:secrets": "node scripts/scan-secrets.js",
+    "check": "pnpm format:check && pnpm lint && pnpm scan:secrets"
+  },
+  "devDependencies": {
+    "@commitlint/cli": "^19.3.0",
+    "@commitlint/config-conventional": "^19.2.2",
+    "husky": "^9.0.11",
+    "lint-staged": "^15.2.7",
+    "prettier": "^3.3.2"
+  }
+}

@@ -60,21 +60,22 @@ Copy `.env.example` to `.env` (or configure system environment variables):
 cp .env.example .env
 ```
 
-| Variable | Default | Required in Production (`DJANGO_DEBUG=False`) | Description |
-|---|---|---|---|
-| `DJANGO_SECRET_KEY` | *(dev fallback)* | **Yes (Fails fast if missing)** | Cryptographic key for session & token signing |
-| `DJANGO_DEBUG` | `True` | No (Defaults to `True` for local dev) | Enable/disable debug mode (`False` in production) |
-| `DJANGO_ALLOWED_HOSTS` | `localhost,127.0.0.1,identity-service,0.0.0.0` | No | Comma-delimited list of valid host headers |
-| `CORS_ALLOWED_ORIGINS` | `http://localhost:3000,http://127.0.0.1:3000` | No | Allowed frontend origins for CORS |
-| `PORT` | `8001` | No | Service bind port |
-| `JWT_ACCESS_TOKEN_LIFETIME_MINUTES` | `60` | No | JWT access token validity duration |
-| `JWT_REFRESH_TOKEN_LIFETIME_DAYS` | `7` | No | JWT refresh token validity duration |
+| Variable                            | Default                                        | Required in Production (`DJANGO_DEBUG=False`) | Description                                       |
+| ----------------------------------- | ---------------------------------------------- | --------------------------------------------- | ------------------------------------------------- |
+| `DJANGO_SECRET_KEY`                 | _(dev fallback)_                               | **Yes (Fails fast if missing)**               | Cryptographic key for session & token signing     |
+| `DJANGO_DEBUG`                      | `True`                                         | No (Defaults to `True` for local dev)         | Enable/disable debug mode (`False` in production) |
+| `DJANGO_ALLOWED_HOSTS`              | `localhost,127.0.0.1,identity-service,0.0.0.0` | No                                            | Comma-delimited list of valid host headers        |
+| `CORS_ALLOWED_ORIGINS`              | `http://localhost:3000,http://127.0.0.1:3000`  | No                                            | Allowed frontend origins for CORS                 |
+| `PORT`                              | `8001`                                         | No                                            | Service bind port                                 |
+| `JWT_ACCESS_TOKEN_LIFETIME_MINUTES` | `60`                                           | No                                            | JWT access token validity duration                |
+| `JWT_REFRESH_TOKEN_LIFETIME_DAYS`   | `7`                                            | No                                            | JWT refresh token validity duration               |
 
 ---
 
 ## 🚀 5. Installation & Migrations
 
 ### 1. Create and Activate Virtual Environment
+
 ```bash
 # On Linux / macOS:
 python3 -m venv .venv
@@ -86,11 +87,13 @@ python -m venv .venv
 ```
 
 ### 2. Install Dependencies
+
 ```bash
 pip install -r requirements.txt
 ```
 
 ### 3. Run Migrations
+
 ```bash
 python manage.py makemigrations users
 python manage.py migrate
@@ -101,12 +104,15 @@ python manage.py migrate
 ## 💻 6. How to Run Locally
 
 ### Development Server
+
 ```bash
 python manage.py runserver 8001
 ```
+
 The service will be live at [http://localhost:8001](http://localhost:8001).
 
 ### Production Server (Gunicorn)
+
 ```bash
 DJANGO_DEBUG=False DJANGO_SECRET_KEY="your-production-secret" gunicorn --bind 0.0.0.0:8001 --workers 2 --threads 4 config.wsgi:application
 ```
@@ -125,21 +131,23 @@ python manage.py test users.tests
 
 ## 📖 8. API Endpoint Documentation
 
-| Method | Endpoint | Authentication | Required Role | Description |
-|---|---|---|---|---|
-| `POST` | `/api/auth/register` | No | Public | Register a new user account |
-| `POST` | `/api/auth/login` | No | Public | Authenticate credentials & issue JWT tokens |
-| `POST` | `/api/auth/refresh` | No | Public | Exchange refresh token for new access token |
-| `GET` | `/api/users/me` | Yes (`Bearer <token>`) | `user` / `admin` | Retrieve current authenticated user profile |
-| `GET` | `/api/users` | Yes (`Bearer <token>`) | `admin` | List all registered users (Admin only) |
-| `GET` | `/health` | No | Public | Lightweight service health probe |
+| Method | Endpoint             | Authentication         | Required Role    | Description                                 |
+| ------ | -------------------- | ---------------------- | ---------------- | ------------------------------------------- |
+| `POST` | `/api/auth/register` | No                     | Public           | Register a new user account                 |
+| `POST` | `/api/auth/login`    | No                     | Public           | Authenticate credentials & issue JWT tokens |
+| `POST` | `/api/auth/refresh`  | No                     | Public           | Exchange refresh token for new access token |
+| `GET`  | `/api/users/me`      | Yes (`Bearer <token>`) | `user` / `admin` | Retrieve current authenticated user profile |
+| `GET`  | `/api/users`         | Yes (`Bearer <token>`) | `admin`          | List all registered users (Admin only)      |
+| `GET`  | `/health`            | No                     | Public           | Lightweight service health probe            |
 
 ---
 
 ## 💡 9. Example Requests & Responses
 
 ### 1. Register User (`POST /api/auth/register`)
+
 **Request**:
+
 ```bash
 curl -X POST http://localhost:8001/api/auth/register \
   -H "Content-Type: application/json" \
@@ -149,7 +157,9 @@ curl -X POST http://localhost:8001/api/auth/register \
     "password": "SecurePassword123!"
   }'
 ```
+
 **Response (`201 Created`)**:
+
 ```json
 {
   "id": 1,
@@ -162,7 +172,9 @@ curl -X POST http://localhost:8001/api/auth/register \
 ---
 
 ### 2. User Login (`POST /api/auth/login`)
+
 **Request**:
+
 ```bash
 curl -X POST http://localhost:8001/api/auth/login \
   -H "Content-Type: application/json" \
@@ -171,7 +183,9 @@ curl -X POST http://localhost:8001/api/auth/login \
     "password": "SecurePassword123!"
   }'
 ```
+
 **Response (`200 OK`)**:
+
 ```json
 {
   "access": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
@@ -182,7 +196,9 @@ curl -X POST http://localhost:8001/api/auth/login \
 ---
 
 ### 3. Refresh Token (`POST /api/auth/refresh`)
+
 **Request**:
+
 ```bash
 curl -X POST http://localhost:8001/api/auth/refresh \
   -H "Content-Type: application/json" \
@@ -190,7 +206,9 @@ curl -X POST http://localhost:8001/api/auth/refresh \
     "refresh": "<your-refresh-token>"
   }'
 ```
+
 **Response (`200 OK`)**:
+
 ```json
 {
   "access": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
@@ -200,12 +218,16 @@ curl -X POST http://localhost:8001/api/auth/refresh \
 ---
 
 ### 4. Current User (`GET /api/users/me`)
+
 **Request**:
+
 ```bash
 curl -X GET http://localhost:8001/api/users/me \
   -H "Authorization: Bearer <your-access-token>"
 ```
+
 **Response (`200 OK`)**:
+
 ```json
 {
   "id": 1,
@@ -218,12 +240,16 @@ curl -X GET http://localhost:8001/api/users/me \
 ---
 
 ### 5. Admin: List Users (`GET /api/users`)
+
 **Request**:
+
 ```bash
 curl -X GET http://localhost:8001/api/users \
   -H "Authorization: Bearer <admin-access-token>"
 ```
+
 **Response (`200 OK`)**:
+
 ```json
 {
   "results": [
@@ -246,11 +272,15 @@ curl -X GET http://localhost:8001/api/users \
 ---
 
 ### 6. Health Check (`GET /health`)
+
 **Request**:
+
 ```bash
 curl http://localhost:8001/health
 ```
+
 **Response (`200 OK`)**:
+
 ```json
 {
   "status": "ok"

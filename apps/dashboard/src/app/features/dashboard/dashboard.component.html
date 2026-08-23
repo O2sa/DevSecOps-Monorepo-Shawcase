@@ -39,27 +39,30 @@
 
         <div class="stat-card">
           <div class="stat-label">Total Revenue</div>
-          <div class="stat-value" style="color: var(--accent-cyan);">${{ totalRevenue.toFixed(2) }}</div>
+          <div class="stat-value" style="color: var(--accent-cyan)">
+            ${{ totalRevenue.toFixed(2) }}
+          </div>
           <div class="stat-sub">Gross order volume</div>
         </div>
 
         <div class="stat-card">
           <div class="stat-label">Pending / Processing</div>
-          <div class="stat-value" style="color: var(--warning);">
-            {{ pendingCount }} <span style="font-size: 1rem; color: var(--text-muted);">/</span> {{ processingCount }}
+          <div class="stat-value" style="color: var(--warning)">
+            {{ pendingCount }} <span style="font-size: 1rem; color: var(--text-muted)">/</span>
+            {{ processingCount }}
           </div>
           <div class="stat-sub">Awaiting fulfillment</div>
         </div>
 
         <div class="stat-card">
           <div class="stat-label">Registered Accounts</div>
-          <div class="stat-value" style="color: var(--accent-blue);">{{ users.length }}</div>
+          <div class="stat-value" style="color: var(--accent-blue)">{{ users.length }}</div>
           <div class="stat-sub">Django Identity Service</div>
         </div>
       </div>
 
       <!-- Quick Action Cards -->
-      <div class="actions-grid" style="margin: 2rem 0;">
+      <div class="actions-grid" style="margin: 2rem 0">
         <div class="action-card">
           <div class="action-icon">📦</div>
           <h3>Order Operations</h3>
@@ -83,10 +86,18 @@
       </div>
 
       <!-- Recent Orders Section -->
-      <div class="section-container" style="margin-top: 2rem;">
+      <div class="section-container" style="margin-top: 2rem">
         <div class="card-header">
           <h2>Recent Order Activity</h2>
-          <a routerLink="/orders" style="color: var(--accent-cyan); text-decoration: none; font-size: 0.85rem; font-weight: 600;">
+          <a
+            routerLink="/orders"
+            style="
+              color: var(--accent-cyan);
+              text-decoration: none;
+              font-size: 0.85rem;
+              font-weight: 600;
+            "
+          >
             View All {{ orders.length }} Orders &rarr;
           </a>
         </div>
@@ -112,11 +123,17 @@
               <tbody>
                 @for (order of recentOrders; track order.id) {
                   <tr>
-                    <td><strong>#{{ order.id }}</strong></td>
+                    <td>
+                      <strong>#{{ order.id }}</strong>
+                    </td>
                     <td>User #{{ order.userId }}</td>
                     <td>{{ order.product.name }}</td>
                     <td>{{ order.quantity }}</td>
-                    <td><strong style="color: var(--accent-cyan);">${{ ((order.product.price || 0) * order.quantity).toFixed(2) }}</strong></td>
+                    <td>
+                      <strong style="color: var(--accent-cyan)"
+                        >${{ ((order.product.price || 0) * order.quantity).toFixed(2) }}</strong
+                      >
+                    </td>
                     <td>
                       @if (order.status === 'COMPLETED') {
                         <span class="badge badge-completed">✓ Completed</span>
@@ -126,8 +143,8 @@
                         <span class="badge badge-pending">⏳ Pending</span>
                       }
                     </td>
-                    <td style="color: var(--text-muted); font-size: 0.8rem;">
-                      {{ order.createdAt | date:'medium' }}
+                    <td style="color: var(--text-muted); font-size: 0.8rem">
+                      {{ order.createdAt | date: 'medium' }}
                     </td>
                   </tr>
                 }

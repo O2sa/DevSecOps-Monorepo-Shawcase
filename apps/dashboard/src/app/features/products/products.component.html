@@ -25,7 +25,9 @@
 
     <div class="alert alert-info">
       <span>
-        ℹ️ <strong>Operational Architecture Notice</strong>: Product catalog data is seeded in-memory and read-only. Direct product creation and deletion APIs are intentionally reserved for Phase 2 backend catalog enhancements.
+        ℹ️ <strong>Operational Architecture Notice</strong>: Product catalog data is seeded
+        in-memory and read-only. Direct product creation and deletion APIs are intentionally
+        reserved for Phase 2 backend catalog enhancements.
       </span>
     </div>
 
@@ -56,12 +58,14 @@
           <tbody>
             @for (product of products; track product.id) {
               <tr>
-                <td><strong>#{{ product.id }}</strong></td>
+                <td>
+                  <strong>#{{ product.id }}</strong>
+                </td>
                 <td>
                   <strong>{{ product.name }}</strong>
                 </td>
                 <td>
-                  <strong style="color: var(--accent-cyan);">
+                  <strong style="color: var(--accent-cyan)">
                     ${{ product.price.toFixed(2) }}
                   </strong>
                 </td>
@@ -73,7 +77,7 @@
                 <td>
                   <span class="badge badge-success">● Active</span>
                 </td>
-                <td style="color: var(--text-muted); font-size: 0.85rem;">
+                <td style="color: var(--text-muted); font-size: 0.85rem">
                   Spring Boot (Port 8002)
                 </td>
               </tr>

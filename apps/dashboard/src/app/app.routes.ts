@@ -10,39 +10,39 @@ export const routes: Routes = [
   {
     path: 'login',
     component: LoginComponent,
-    title: 'Admin Sign In - DevSecOps Dashboard'
+    title: 'Admin Sign In - DevSecOps Dashboard',
   },
   {
     path: 'dashboard',
     component: DashboardComponent,
     canActivate: [adminGuard],
-    title: 'Overview - DevSecOps Dashboard'
+    title: 'Overview - DevSecOps Dashboard',
   },
   {
     path: 'orders',
     component: OrdersComponent,
     canActivate: [adminGuard],
-    title: 'Orders Management - DevSecOps Dashboard'
+    title: 'Orders Management - DevSecOps Dashboard',
   },
   {
     path: 'products',
     component: ProductsComponent,
     canActivate: [adminGuard],
-    title: 'Products Catalog - DevSecOps Dashboard'
+    title: 'Products Catalog - DevSecOps Dashboard',
   },
   {
     path: 'users',
     component: UsersComponent,
     canActivate: [adminGuard],
-    title: 'User Directory - DevSecOps Dashboard'
+    title: 'User Directory - DevSecOps Dashboard',
   },
   {
     path: '',
     pathMatch: 'full',
-    redirectTo: 'dashboard'
+    redirectTo: 'dashboard',
   },
   {
     path: '**',
-    redirectTo: 'dashboard'
-  }
+    redirectTo: 'dashboard',
+  },
 ];

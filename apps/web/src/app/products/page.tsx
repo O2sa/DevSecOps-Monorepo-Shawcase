@@ -38,7 +38,8 @@ export default function ProductsPage() {
       setQuantities(initialQuantities);
     } catch (err: any) {
       setErrorMessage(
-        err.message || 'Unable to load products. Please verify the Orders Service is running on port 8002.'
+        err.message ||
+          'Unable to load products. Please verify the Orders Service is running on port 8002.'
       );
     } finally {
       setIsLoading(false);
@@ -138,7 +139,13 @@ export default function ProductsPage() {
             {products.map((product) => (
               <div key={product.id} className="product-card">
                 <div>
-                  <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '0.25rem' }}>
+                  <div
+                    style={{
+                      fontSize: '0.75rem',
+                      color: 'var(--text-muted)',
+                      marginBottom: '0.25rem',
+                    }}
+                  >
                     ITEM #{product.id}
                   </div>
                   <div className="product-name">{product.name}</div>
@@ -170,8 +177,8 @@ export default function ProductsPage() {
                     {orderingProductId === product.id
                       ? 'Ordering...'
                       : isAuthenticated
-                      ? 'Place Order'
-                      : 'Log in to Order'}
+                        ? 'Place Order'
+                        : 'Log in to Order'}
                   </button>
                 </div>
               </div>
@@ -182,7 +189,10 @@ export default function ProductsPage() {
 
       {isAuthenticated && (
         <div style={{ textAlign: 'right', marginTop: '1rem' }}>
-          <Link href="/orders" style={{ color: 'var(--accent-cyan)', textDecoration: 'none', fontWeight: 600 }}>
+          <Link
+            href="/orders"
+            style={{ color: 'var(--accent-cyan)', textDecoration: 'none', fontWeight: 600 }}
+          >
             View your order history &rarr;
           </Link>
         </div>

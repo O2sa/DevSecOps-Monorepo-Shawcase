@@ -13,7 +13,8 @@ export default function HomePage() {
           <div>
             <h1>DevSecOps Web Portal</h1>
             <p className="subtitle">
-              Public client application demonstrating multi-technology microservice integration and DevSecOps workflows.
+              Public client application demonstrating multi-technology microservice integration and
+              DevSecOps workflows.
             </p>
           </div>
           <span className="badge badge-success">
@@ -25,7 +26,8 @@ export default function HomePage() {
         {isAuthenticated && user ? (
           <div className="alert alert-success" style={{ marginBottom: '1.5rem' }}>
             <span>
-              Welcome back, <strong>{user.username}</strong> ({user.email || 'authenticated'})! You can browse products, manage orders, and check notifications.
+              Welcome back, <strong>{user.username}</strong> ({user.email || 'authenticated'})! You
+              can browse products, manage orders, and check notifications.
             </span>
           </div>
         ) : null}
@@ -79,7 +81,8 @@ export default function HomePage() {
       <div className="card">
         <h2>🏛️ Architecture & Endpoints</h2>
         <p className="subtitle">
-          All client operations call backend microservices using standardized REST interfaces and stateless Bearer JWTs:
+          All client operations call backend microservices using standardized REST interfaces and
+          stateless Bearer JWTs:
         </p>
 
         <div className="table-container">
@@ -94,22 +97,34 @@ export default function HomePage() {
             </thead>
             <tbody>
               <tr>
-                <td><strong>Identity Service</strong></td>
+                <td>
+                  <strong>Identity Service</strong>
+                </td>
                 <td>User Registration & Login</td>
                 <td>Public</td>
-                <td><code>/api/auth/register</code>, <code>/api/auth/login</code></td>
+                <td>
+                  <code>/api/auth/register</code>, <code>/api/auth/login</code>
+                </td>
               </tr>
               <tr>
-                <td><strong>Orders Service</strong></td>
+                <td>
+                  <strong>Orders Service</strong>
+                </td>
                 <td>Products & Orders</td>
                 <td>Bearer JWT</td>
-                <td><code>/api/products</code>, <code>/api/orders</code>, <code>/api/orders/me</code></td>
+                <td>
+                  <code>/api/products</code>, <code>/api/orders</code>, <code>/api/orders/me</code>
+                </td>
               </tr>
               <tr>
-                <td><strong>Notification Service</strong></td>
+                <td>
+                  <strong>Notification Service</strong>
+                </td>
                 <td>Alerts & Notifications</td>
                 <td>Bearer JWT</td>
-                <td><code>/api/notifications</code>, <code>/api/notifications/:id/read</code></td>
+                <td>
+                  <code>/api/notifications</code>, <code>/api/notifications/:id/read</code>
+                </td>
               </tr>
             </tbody>
           </table>

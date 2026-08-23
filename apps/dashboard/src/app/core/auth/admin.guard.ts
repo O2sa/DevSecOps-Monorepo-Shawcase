@@ -1,5 +1,10 @@
 import { inject } from '@angular/core';
-import { CanActivateFn, Router, ActivatedRouteSnapshot, RouterStateSnapshot } from '@angular/router';
+import {
+  CanActivateFn,
+  Router,
+  ActivatedRouteSnapshot,
+  RouterStateSnapshot,
+} from '@angular/router';
 import { AuthService } from './auth.service';
 
 export const adminGuard: CanActivateFn = (
@@ -15,12 +20,12 @@ export const adminGuard: CanActivateFn = (
 
   if (!authService.isAuthenticated()) {
     return router.createUrlTree(['/login'], {
-      queryParams: { returnUrl: state.url }
+      queryParams: { returnUrl: state.url },
     });
   }
 
   // Authenticated as regular user, not admin
   return router.createUrlTree(['/login'], {
-    queryParams: { error: 'forbidden' }
+    queryParams: { error: 'forbidden' },
   });
 };

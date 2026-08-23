@@ -8,7 +8,7 @@ import { NavbarComponent } from './layout/navbar/navbar.component';
   standalone: true,
   imports: [CommonModule, RouterModule, NavbarComponent],
   templateUrl: './app.component.html',
-  styleUrls: ['./app.component.css']
+  styleUrls: ['./app.component.css'],
 })
 export class AppComponent {
   title = 'DevSecOps Admin Dashboard';

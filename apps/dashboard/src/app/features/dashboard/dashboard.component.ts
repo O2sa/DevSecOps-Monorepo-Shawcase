@@ -13,7 +13,7 @@ import { User } from '../../core/models/auth.model';
   standalone: true,
   imports: [CommonModule, RouterModule],
   templateUrl: './dashboard.component.html',
-  styleUrls: []
+  styleUrls: [],
 })
 export class DashboardComponent implements OnInit {
   private ordersApi = inject(OrdersApiService);
@@ -43,7 +43,7 @@ export class DashboardComponent implements OnInit {
     forkJoin({
       orders: this.ordersApi.getAllOrders(),
       products: this.ordersApi.getProducts(),
-      users: this.identityApi.getUsers()
+      users: this.identityApi.getUsers(),
     }).subscribe({
       next: ({ orders, products, users }) => {
         this.orders = orders;
@@ -55,8 +55,9 @@ export class DashboardComponent implements OnInit {
       },
       error: (err) => {
         this.isLoading = false;
-        this.errorMessage = err.error?.detail || err.error?.message || 'Failed to load operational dashboard data.';
-      }
+        this.errorMessage =
+          err.error?.detail || err.error?.message || 'Failed to load operational dashboard data.';
+      },
     });
   }
 

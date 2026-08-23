@@ -1,0 +1,13 @@
+node_modules
+dist
+.next
+.angular
+target
+.venv
+venv
+__pycache__
+*.pyc
+db.sqlite3
+coverage
+pnpm-lock.yaml
+package-lock.json

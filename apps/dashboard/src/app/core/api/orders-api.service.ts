@@ -6,7 +6,7 @@ import { Order, OrderStatus, UpdateOrderStatusRequest } from '../models/order.mo
 import { environment } from '../../../environments/environment';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class OrdersApiService {
   private readonly baseUrl = environment.ordersServiceUrl;

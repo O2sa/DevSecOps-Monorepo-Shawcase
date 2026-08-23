@@ -49,7 +49,9 @@
           <tbody>
             @for (user of users; track user.id) {
               <tr>
-                <td><strong>#{{ user.id }}</strong></td>
+                <td>
+                  <strong>#{{ user.id }}</strong>
+                </td>
                 <td>
                   <strong>{{ user.username }}</strong>
                 </td>
@@ -61,7 +63,7 @@
                     <span class="badge badge-processing">👤 User</span>
                   }
                 </td>
-                <td style="color: var(--text-muted); font-size: 0.85rem;">
+                <td style="color: var(--text-muted); font-size: 0.85rem">
                   @if (user.role === 'admin' || user.is_admin) {
                     <span>Full Control (Orders, Status Transitions, Directory Audit)</span>
                   } @else {

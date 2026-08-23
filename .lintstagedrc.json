@@ -1,0 +1,5 @@
+{
+  "apps/**/*.{ts,tsx,js,jsx}": ["prettier --write"],
+  "apps/identity-service/**/*.py": ["node scripts/lint-python.js"],
+  "*.{json,yaml,yml,md}": ["prettier --write"]
+}

@@ -66,11 +66,7 @@ function LoginForm() {
         </p>
 
         {infoMessage && (
-          <Alert
-            type="success"
-            message={infoMessage}
-            onClose={() => setInfoMessage(null)}
-          />
+          <Alert type="success" message={infoMessage} onClose={() => setInfoMessage(null)} />
         )}
 
         {errorMessage && (
@@ -84,7 +80,9 @@ function LoginForm() {
 
         <form onSubmit={handleSubmit}>
           <div className="form-group">
-            <label className="form-label" htmlFor="username">Username</label>
+            <label className="form-label" htmlFor="username">
+              Username
+            </label>
             <input
               id="username"
               type="text"
@@ -99,7 +97,9 @@ function LoginForm() {
           </div>
 
           <div className="form-group">
-            <label className="form-label" htmlFor="password">Password</label>
+            <label className="form-label" htmlFor="password">
+              Password
+            </label>
             <input
               id="password"
               type="password"
@@ -123,9 +123,19 @@ function LoginForm() {
           </button>
         </form>
 
-        <div style={{ marginTop: '1.5rem', textAlign: 'center', fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
+        <div
+          style={{
+            marginTop: '1.5rem',
+            textAlign: 'center',
+            fontSize: '0.875rem',
+            color: 'var(--text-secondary)',
+          }}
+        >
           Don&apos;t have an account?{' '}
-          <Link href="/register" style={{ color: 'var(--accent-cyan)', fontWeight: 600, textDecoration: 'none' }}>
+          <Link
+            href="/register"
+            style={{ color: 'var(--accent-cyan)', fontWeight: 600, textDecoration: 'none' }}
+          >
             Register here &rarr;
           </Link>
         </div>

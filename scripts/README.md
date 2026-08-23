@@ -14,11 +14,13 @@ This directory contains cross-platform developer utilities, local validation scr
 ## 🛠️ Usage
 
 ### Run on Linux / macOS / Git Bash
+
 ```bash
 ./scripts/dev-setup.sh
 ```
 
 ### Run on Windows PowerShell
+
 ```powershell
 .\scripts\dev-setup.ps1
 ```

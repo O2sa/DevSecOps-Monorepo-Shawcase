@@ -5,7 +5,7 @@ import { User } from '../models/auth.model';
 import { environment } from '../../../environments/environment';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class IdentityApiService {
   private readonly baseUrl = environment.identityServiceUrl;
@@ -17,8 +17,8 @@ export class IdentityApiService {
   }
 
   getUsers(): Observable<User[]> {
-    return this.http.get<User[] | { results: User[] }>(`${this.baseUrl}/api/users`).pipe(
-      map((res) => (Array.isArray(res) ? res : res.results || []))
-    );
+    return this.http
+      .get<User[] | { results: User[] }>(`${this.baseUrl}/api/users`)
+      .pipe(map((res) => (Array.isArray(res) ? res : res.results || [])));
   }
 }

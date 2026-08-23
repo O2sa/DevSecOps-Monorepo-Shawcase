@@ -10,7 +10,7 @@ import { Order } from '../../core/models/order.model';
   standalone: true,
   imports: [CommonModule],
   templateUrl: './products.component.html',
-  styleUrls: []
+  styleUrls: [],
 })
 export class ProductsComponent implements OnInit {
   private ordersApi = inject(OrdersApiService);
@@ -30,7 +30,7 @@ export class ProductsComponent implements OnInit {
 
     forkJoin({
       products: this.ordersApi.getProducts(),
-      orders: this.ordersApi.getAllOrders()
+      orders: this.ordersApi.getAllOrders(),
     }).subscribe({
       next: ({ products, orders }) => {
         this.products = products;
@@ -45,8 +45,9 @@ export class ProductsComponent implements OnInit {
       },
       error: (err) => {
         this.isLoading = false;
-        this.errorMessage = err.error?.message || err.error?.detail || 'Failed to retrieve product inventory.';
-      }
+        this.errorMessage =
+          err.error?.message || err.error?.detail || 'Failed to retrieve product inventory.';
+      },
     });
   }
 }

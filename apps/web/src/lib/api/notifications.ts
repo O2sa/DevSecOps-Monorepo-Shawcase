@@ -16,8 +16,11 @@ export const notificationsApi = {
   },
 
   async markAsRead(id: number): Promise<Notification> {
-    return apiClient<Notification>(`${config.notificationServiceUrl}/api/notifications/${id}/read`, {
-      method: 'PATCH',
-    });
+    return apiClient<Notification>(
+      `${config.notificationServiceUrl}/api/notifications/${id}/read`,
+      {
+        method: 'PATCH',
+      }
+    );
   },
 };

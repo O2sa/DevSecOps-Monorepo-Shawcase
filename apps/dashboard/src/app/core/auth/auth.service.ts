@@ -7,7 +7,7 @@ import { User, LoginRequest, LoginResponse, DecodedJwtPayload } from '../models/
 import { environment } from '../../../environments/environment';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class AuthService {
   private currentUserSignal = signal<User | null>(null);
@@ -37,7 +37,7 @@ export class AuthService {
           username: payload.username,
           email: payload.email,
           role: payload.role,
-          is_admin: payload.is_admin
+          is_admin: payload.is_admin,
         });
       } else {
         this.storage.clear();
@@ -47,31 +47,30 @@ export class AuthService {
   }
 
   login(credentials: LoginRequest): Observable<LoginResponse> {
-    return this.http.post<LoginResponse>(
-      `${environment.identityServiceUrl}/api/auth/login`,
-      credentials
-    ).pipe(
-      tap((response) => {
-        this.storage.setAccessToken(response.access);
-        if (response.refresh) {
-          this.storage.setRefreshToken(response.refresh);
-        }
+    return this.http
+      .post<LoginResponse>(`${environment.identityServiceUrl}/api/auth/login`, credentials)
+      .pipe(
+        tap((response) => {
+          this.storage.setAccessToken(response.access);
+          if (response.refresh) {
+            this.storage.setRefreshToken(response.refresh);
+          }
 
-        const payload = this.decodeToken(response.access);
-        if (payload) {
-          this.currentUserSignal.set({
-            id: payload.user_id,
-            username: payload.username,
-            email: payload.email,
-            role: payload.role,
-            is_admin: payload.is_admin
-          });
-        }
-      }),
-      catchError((error) => {
-        return throwError(() => error);
-      })
-    );
+          const payload = this.decodeToken(response.access);
+          if (payload) {
+            this.currentUserSignal.set({
+              id: payload.user_id,
+              username: payload.username,
+              email: payload.email,
+              role: payload.role,
+              is_admin: payload.is_admin,
+            });
+          }
+        }),
+        catchError((error) => {
+          return throwError(() => error);
+        })
+      );
   }
 
   logout(): void {

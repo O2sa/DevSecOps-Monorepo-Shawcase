@@ -122,7 +122,9 @@ function OrdersContent() {
                         <strong style={{ color: 'var(--accent-cyan)' }}>${total.toFixed(2)}</strong>
                       </td>
                       <td>{getStatusBadge(order.status)}</td>
-                      <td style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>{formattedDate}</td>
+                      <td style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>
+                        {formattedDate}
+                      </td>
                     </tr>
                   );
                 })}

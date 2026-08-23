@@ -87,11 +87,7 @@ function NotificationsContent() {
         )}
 
         {successMessage && (
-          <Alert
-            type="success"
-            message={successMessage}
-            onClose={() => setSuccessMessage(null)}
-          />
+          <Alert type="success" message={successMessage} onClose={() => setSuccessMessage(null)} />
         )}
 
         <div className="tab-row">
@@ -141,12 +137,8 @@ function NotificationsContent() {
                   <div className="notification-content">
                     <div className="notification-title">
                       <span>{notification.title}</span>
-                      <span className="badge badge-processing">
-                        {notification.type || 'EVENT'}
-                      </span>
-                      {!notification.read && (
-                        <span className="badge badge-pending">Unread</span>
-                      )}
+                      <span className="badge badge-processing">{notification.type || 'EVENT'}</span>
+                      {!notification.read && <span className="badge badge-pending">Unread</span>}
                     </div>
                     <p className="notification-message">{notification.message}</p>
                     <span className="notification-time">{formattedDate}</span>

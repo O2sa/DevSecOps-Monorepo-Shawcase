@@ -15,9 +15,7 @@ describe('POST /internal/notifications', () => {
       message: 'Your order #12 has been created successfully.',
     };
 
-    const res = await request(app)
-      .post('/internal/notifications')
-      .send(payload);
+    const res = await request(app).post('/internal/notifications').send(payload);
 
     expect(res.status).toBe(201);
     expect(res.body).toMatchObject({
@@ -32,52 +30,44 @@ describe('POST /internal/notifications', () => {
   });
 
   it('should return 400 Bad Request when userId is missing or <= 0', async () => {
-    const resMissing = await request(app)
-      .post('/internal/notifications')
-      .send({
-        type: 'ORDER_CREATED',
-        title: 'Order created',
-        message: 'Order created.',
-      });
+    const resMissing = await request(app).post('/internal/notifications').send({
+      type: 'ORDER_CREATED',
+      title: 'Order created',
+      message: 'Order created.',
+    });
 
     expect(resMissing.status).toBe(400);
     expect(resMissing.body.message).toBe('Validation failed');
     expect(resMissing.body.errors.userId).toBeDefined();
 
-    const resZero = await request(app)
-      .post('/internal/notifications')
-      .send({
-        userId: 0,
-        type: 'ORDER_CREATED',
-        title: 'Order created',
-        message: 'Order created.',
-      });
+    const resZero = await request(app).post('/internal/notifications').send({
+      userId: 0,
+      type: 'ORDER_CREATED',
+      title: 'Order created',
+      message: 'Order created.',
+    });
 
     expect(resZero.status).toBe(400);
     expect(resZero.body.errors.userId).toBeDefined();
 
-    const resNegative = await request(app)
-      .post('/internal/notifications')
-      .send({
-        userId: -10,
-        type: 'ORDER_CREATED',
-        title: 'Order created',
-        message: 'Order created.',
-      });
+    const resNegative = await request(app).post('/internal/notifications').send({
+      userId: -10,
+      type: 'ORDER_CREATED',
+      title: 'Order created',
+      message: 'Order created.',
+    });
 
     expect(resNegative.status).toBe(400);
     expect(resNegative.body.errors.userId).toBeDefined();
   });
 
   it('should return 400 Bad Request when notification type is invalid', async () => {
-    const res = await request(app)
-      .post('/internal/notifications')
-      .send({
-        userId: 5,
-        type: 'INVALID_TYPE',
-        title: 'Order created',
-        message: 'Order created.',
-      });
+    const res = await request(app).post('/internal/notifications').send({
+      userId: 5,
+      type: 'INVALID_TYPE',
+      title: 'Order created',
+      message: 'Order created.',
+    });
 
     expect(res.status).toBe(400);
     expect(res.body.message).toBe('Validation failed');
@@ -85,14 +75,12 @@ describe('POST /internal/notifications', () => {
   });
 
   it('should return 400 Bad Request when title or message is empty', async () => {
-    const res = await request(app)
-      .post('/internal/notifications')
-      .send({
-        userId: 5,
-        type: 'ORDER_CREATED',
-        title: '   ',
-        message: '',
-      });
+    const res = await request(app).post('/internal/notifications').send({
+      userId: 5,
+      type: 'ORDER_CREATED',
+      title: '   ',
+      message: '',
+    });
 
     expect(res.status).toBe(400);
     expect(res.body.errors.title).toBeDefined();

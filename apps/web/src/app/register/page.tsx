@@ -17,7 +17,9 @@ export default function RegisterPage() {
 
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [fieldErrors, setFieldErrors] = useState<Record<string, string | string[]> | undefined>(undefined);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string | string[]> | undefined>(
+    undefined
+  );
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -69,16 +71,13 @@ export default function RegisterPage() {
           />
         )}
 
-        {successMessage && (
-          <Alert
-            type="success"
-            message={successMessage}
-          />
-        )}
+        {successMessage && <Alert type="success" message={successMessage} />}
 
         <form onSubmit={handleSubmit}>
           <div className="form-group">
-            <label className="form-label" htmlFor="username">Username</label>
+            <label className="form-label" htmlFor="username">
+              Username
+            </label>
             <input
               id="username"
               type="text"
@@ -93,7 +92,9 @@ export default function RegisterPage() {
           </div>
 
           <div className="form-group">
-            <label className="form-label" htmlFor="email">Email Address</label>
+            <label className="form-label" htmlFor="email">
+              Email Address
+            </label>
             <input
               id="email"
               type="email"
@@ -108,7 +109,9 @@ export default function RegisterPage() {
           </div>
 
           <div className="form-group">
-            <label className="form-label" htmlFor="password">Password</label>
+            <label className="form-label" htmlFor="password">
+              Password
+            </label>
             <input
               id="password"
               type="password"
@@ -132,9 +135,19 @@ export default function RegisterPage() {
           </button>
         </form>
 
-        <div style={{ marginTop: '1.5rem', textAlign: 'center', fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
+        <div
+          style={{
+            marginTop: '1.5rem',
+            textAlign: 'center',
+            fontSize: '0.875rem',
+            color: 'var(--text-secondary)',
+          }}
+        >
           Already have an account?{' '}
-          <Link href="/login" style={{ color: 'var(--accent-cyan)', fontWeight: 600, textDecoration: 'none' }}>
+          <Link
+            href="/login"
+            style={{ color: 'var(--accent-cyan)', fontWeight: 600, textDecoration: 'none' }}
+          >
             Log In &rarr;
           </Link>
         </div>

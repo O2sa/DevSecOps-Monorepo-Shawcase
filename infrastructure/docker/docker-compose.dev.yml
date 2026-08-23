@@ -3,7 +3,7 @@ services:
   web:
     build:
       target: deps
-    command: npm run dev
+    command: pnpm dev
     volumes:
       - ../../apps/web:/app
       - /app/node_modules
@@ -12,7 +12,7 @@ services:
   dashboard:
     build:
       target: builder
-    command: npm start
+    command: pnpm start
     volumes:
       - ../../apps/dashboard:/app
       - /app/node_modules
@@ -29,7 +29,7 @@ services:
       - SPRING_PROFILES_ACTIVE=dev
 
   notification-service:
-    command: npm run dev
+    command: pnpm dev
     volumes:
       - ../../apps/notification-service:/app
       - /app/node_modules

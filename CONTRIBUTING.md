@@ -15,6 +15,7 @@ Thank you for contributing! This guide outlines development practices, conventio
 ## 🌿 Branching and Git Conventions
 
 ### Branch Naming
+
 - `feature/<ticket-or-name>`: New feature or capability
 - `fix/<ticket-or-name>`: Bug fixes
 - `sec/<cve-or-rule>`: Security vulnerability fixes or policy updates
@@ -22,7 +23,9 @@ Thank you for contributing! This guide outlines development practices, conventio
 - `docs/<description>`: Documentation changes
 
 ### Commit Messages (Conventional Commits)
+
 We enforce the Conventional Commits specification:
+
 ```
 <type>(<scope>): <short summary>
 
@@ -32,6 +35,7 @@ We enforce the Conventional Commits specification:
 ```
 
 **Types**:
+
 - `feat`: A new feature
 - `fix`: A bug fix
 - `sec`: Security vulnerability remediations or security policy additions
@@ -42,9 +46,11 @@ We enforce the Conventional Commits specification:
 - `test`: Adding or updating tests
 
 **Scopes**:
+
 - `web`, `dashboard`, `identity`, `orders`, `notifications`, `infra`, `security`, `root`
 
 **Example**:
+
 ```
 feat(identity): add health check endpoint and gunicorn config
 sec(orders): update spring boot actuator security policy

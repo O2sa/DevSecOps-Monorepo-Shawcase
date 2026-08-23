@@ -9,7 +9,7 @@ import { Order, OrderStatus } from '../../core/models/order.model';
   standalone: true,
   imports: [CommonModule, FormsModule],
   templateUrl: './orders.component.html',
-  styleUrls: []
+  styleUrls: [],
 })
 export class OrdersComponent implements OnInit {
   private ordersApi = inject(OrdersApiService);
@@ -44,8 +44,11 @@ export class OrdersComponent implements OnInit {
       },
       error: (err) => {
         this.isLoading = false;
-        this.errorMessage = err.error?.message || err.error?.detail || 'Failed to retrieve orders from Orders Service.';
-      }
+        this.errorMessage =
+          err.error?.message ||
+          err.error?.detail ||
+          'Failed to retrieve orders from Orders Service.';
+      },
     });
   }
 
@@ -83,8 +86,11 @@ export class OrdersComponent implements OnInit {
       },
       error: (err) => {
         this.updatingOrderId = null;
-        this.errorMessage = err.error?.message || err.error?.detail || `Failed to update status for Order #${order.id}.`;
-      }
+        this.errorMessage =
+          err.error?.message ||
+          err.error?.detail ||
+          `Failed to update status for Order #${order.id}.`;
+      },
     });
   }
 }

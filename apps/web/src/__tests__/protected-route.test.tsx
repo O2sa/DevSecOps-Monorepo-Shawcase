@@ -40,7 +40,9 @@ describe('ProtectedRoute Guard', () => {
 
   it('redirects unauthenticated user to /login with return query', () => {
     render(
-      <AuthContext.Provider value={{ ...baseAuthContext, isLoading: false, isAuthenticated: false }}>
+      <AuthContext.Provider
+        value={{ ...baseAuthContext, isLoading: false, isAuthenticated: false }}
+      >
         <ProtectedRoute>
           <div>Protected Content</div>
         </ProtectedRoute>

@@ -24,7 +24,7 @@ describe('AuthService', () => {
       'setAccessToken',
       'getRefreshToken',
       'setRefreshToken',
-      'clear'
+      'clear',
     ]);
     const rSpy = jasmine.createSpyObj('Router', ['navigate']);
 
@@ -33,8 +33,8 @@ describe('AuthService', () => {
       providers: [
         AuthService,
         { provide: AuthStorageService, useValue: sSpy },
-        { provide: Router, useValue: rSpy }
-      ]
+        { provide: Router, useValue: rSpy },
+      ],
     });
 
     service = TestBed.inject(AuthService);
@@ -58,7 +58,7 @@ describe('AuthService', () => {
       email: 'admin@devsecops.local',
       role: 'admin',
       is_admin: true,
-      exp: Math.floor(Date.now() / 1000) + 3600
+      exp: Math.floor(Date.now() / 1000) + 3600,
     };
     const token = createMockToken(adminPayload);
 
@@ -84,7 +84,7 @@ describe('AuthService', () => {
       email: 'user@devsecops.local',
       role: 'user',
       is_admin: false,
-      exp: Math.floor(Date.now() / 1000) + 3600
+      exp: Math.floor(Date.now() / 1000) + 3600,
     };
     const token = createMockToken(userPayload);
 

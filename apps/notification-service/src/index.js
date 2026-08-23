@@ -17,7 +17,7 @@ app.get('/health', (req, res) => {
     service: 'notification-service',
     framework: 'Express',
     timestamp: new Date().toISOString(),
-    uptime: process.uptime()
+    uptime: process.uptime(),
   });
 });
 
@@ -27,7 +27,7 @@ app.get('/', (req, res) => {
     service: 'Notification Service',
     description: 'Internal notification and alert dispatch microservice',
     status: 'Scaffolded (Phase 1)',
-    health: '/health'
+    health: '/health',
   });
 });
 

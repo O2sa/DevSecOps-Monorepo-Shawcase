@@ -53,7 +53,9 @@ describe('Notifications Page', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     (notificationsApi.getNotifications as jest.Mock).mockResolvedValue(mockNotifications);
-    (notificationsApi.getUnreadNotifications as jest.Mock).mockResolvedValue([mockNotifications[0]]);
+    (notificationsApi.getUnreadNotifications as jest.Mock).mockResolvedValue([
+      mockNotifications[0],
+    ]);
   });
 
   it('renders all notifications by default', async () => {

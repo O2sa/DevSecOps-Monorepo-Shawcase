@@ -8,18 +8,14 @@
 
       @if (isAdmin()) {
         <nav class="nav-links">
-          <a routerLink="/dashboard" routerLinkActive="active" class="nav-link">
-            📊 Overview
-          </a>
+          <a routerLink="/dashboard" routerLinkActive="active" class="nav-link"> 📊 Overview </a>
           <a routerLink="/orders" routerLinkActive="active" class="nav-link">
             📦 Orders Management
           </a>
           <a routerLink="/products" routerLinkActive="active" class="nav-link">
             🛍️ Products Catalog
           </a>
-          <a routerLink="/users" routerLinkActive="active" class="nav-link">
-            👥 User Directory
-          </a>
+          <a routerLink="/users" routerLinkActive="active" class="nav-link"> 👥 User Directory </a>
         </nav>
       }
     </div>
@@ -31,14 +27,10 @@
             <span class="admin-badge">Admin</span>
             <strong>{{ currentUser()?.username }}</strong>
           </span>
-          <button type="button" class="btn btn-outline btn-sm" (click)="logout()">
-            Sign Out
-          </button>
+          <button type="button" class="btn btn-outline btn-sm" (click)="logout()">Sign Out</button>
         </div>
       } @else {
-        <a routerLink="/login" class="btn btn-primary btn-sm">
-          Admin Sign In
-        </a>
+        <a routerLink="/login" class="btn btn-primary btn-sm"> Admin Sign In </a>
       }
     </div>
   </div>

@@ -101,14 +101,16 @@
                   <span class="user-tag">User #{{ order.userId }}</span>
                 </td>
                 <td>
-                  <div><strong>{{ order.product.name }}</strong></div>
-                  <div style="font-size: 0.75rem; color: var(--text-muted);">
+                  <div>
+                    <strong>{{ order.product.name }}</strong>
+                  </div>
+                  <div style="font-size: 0.75rem; color: var(--text-muted)">
                     Unit Price: ${{ (order.product.price || 0).toFixed(2) }}
                   </div>
                 </td>
                 <td>{{ order.quantity }}</td>
                 <td>
-                  <strong style="color: var(--accent-cyan);">
+                  <strong style="color: var(--accent-cyan)">
                     ${{ ((order.product.price || 0) * order.quantity).toFixed(2) }}
                   </strong>
                 </td>
@@ -121,8 +123,8 @@
                     <span class="badge badge-pending">⏳ Pending</span>
                   }
                 </td>
-                <td style="color: var(--text-muted); font-size: 0.8rem;">
-                  {{ order.createdAt | date:'medium' }}
+                <td style="color: var(--text-muted); font-size: 0.8rem">
+                  {{ order.createdAt | date: 'medium' }}
                 </td>
                 <td>
                   <div class="action-cell">
@@ -142,7 +144,9 @@
                       type="button"
                       class="btn btn-primary btn-sm"
                       (click)="updateStatus(order)"
-                      [disabled]="updatingOrderId === order.id || selectedStatuses[order.id] === order.status"
+                      [disabled]="
+                        updatingOrderId === order.id || selectedStatuses[order.id] === order.status
+                      "
                     >
                       @if (updatingOrderId === order.id) {
                         Saving...

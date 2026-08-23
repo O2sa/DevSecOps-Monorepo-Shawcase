@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class AuthStorageService {
   private readonly ACCESS_TOKEN_KEY = 'devsecops_admin_token';

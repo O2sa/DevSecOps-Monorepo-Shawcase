@@ -68,11 +68,11 @@ The **Orders Service** manages product catalog data and the lifecycle of custome
 
 ## ⚙️ 5. Configuration & Environment Variables
 
-| Variable / Property | Default | Description |
-|---|---|---|
-| `SERVER_PORT` / `server.port` | `8002` | HTTP bind port |
-| `DJANGO_SECRET_KEY` / `orders.jwt.secret` | *(scaffold key)* | Shared HMAC-SHA256 JWT secret key |
-| `NOTIFICATION_SERVICE_URL` | `http://localhost:8003` | Target URL for dispatching order notifications |
+| Variable / Property                             | Default                                       | Description                                       |
+| ----------------------------------------------- | --------------------------------------------- | ------------------------------------------------- |
+| `SERVER_PORT` / `server.port`                   | `8002`                                        | HTTP bind port                                    |
+| `DJANGO_SECRET_KEY` / `orders.jwt.secret`       | _(scaffold key)_                              | Shared HMAC-SHA256 JWT secret key                 |
+| `NOTIFICATION_SERVICE_URL`                      | `http://localhost:8003`                       | Target URL for dispatching order notifications    |
 | `CORS_ALLOWED_ORIGINS` / `cors.allowed-origins` | `http://localhost:3000,http://127.0.0.1:3000` | Allowed origins for cross-origin browser requests |
 
 ---
@@ -82,6 +82,7 @@ The **Orders Service** manages product catalog data and the lifecycle of custome
 The Orders Service does **not** store or manage user accounts, passwords, or authentication credentials.
 
 Instead:
+
 1. Users register and log in via the **Django Identity Service** (`POST /api/auth/login` on port `8001`).
 2. The Identity Service issues an HMAC-SHA256 signed JWT containing custom claims: `user_id`, `username`, `email`, `role`, and `is_admin`.
 3. The client passes this token to the Orders Service via `Authorization: Bearer <token>`.
@@ -103,11 +104,13 @@ Instead:
 ## 🗄️ 8. Database Model
 
 ### Product Entity (`products` table)
+
 - `id` (`Long`, Primary Key)
 - `name` (`VARCHAR(255)`, Not Null)
 - `price` (`DECIMAL(10, 2)`, Not Null)
 
 ### Order Entity (`orders` table)
+
 - `id` (`Long`, Primary Key)
 - `user_id` (`Long`, Not Null)
 - `product_id` (`Long`, Foreign Key to `products`, Not Null)
@@ -122,8 +125,8 @@ Instead:
 
 Upon application startup, `DataInitializer` automatically populates the product catalog with 3 demo products:
 
-| ID | Product Name | Price |
-|---|---|---|
+| ID  | Product Name   | Price  |
+| --- | -------------- | ------ |
 | `1` | Demo Product A | $10.00 |
 | `2` | Demo Product B | $20.00 |
 | `3` | Demo Product C | $30.00 |
@@ -133,9 +136,11 @@ Upon application startup, `DataInitializer` automatically populates the product 
 ## 🚀 10. How to Run Locally
 
 ### Prerequisites
+
 - Java 21 JDK installed (`JAVA_HOME` configured).
 
 ### Start the Service
+
 ```bash
 cd apps/orders-service
 
@@ -145,6 +150,7 @@ cd apps/orders-service
 # On Linux / macOS:
 ./mvnw spring-boot:run
 ```
+
 The service will be available at [http://localhost:8002](http://localhost:8002).
 
 ---
@@ -167,41 +173,44 @@ cd apps/orders-service
 
 ## 📖 12. API Endpoint Documentation
 
-| Method | Endpoint | Authentication | Required Role | Status Code | Description |
-|---|---|---|---|---|---|
-| `GET` | `/health` | No | Public | `200 OK` | Service health probe (`{"status": "ok"}`) |
-| `GET` | `/api/products` | No | Public | `200 OK` | List all available demo products |
-| `GET` | `/api/products/{id}` | No | Public | `200 OK` / `404` | Get single product by ID |
-| `POST` | `/api/orders` | Yes (`Bearer <token>`) | `user` / `admin` | `201 Created` | Create new order for authenticated user |
-| `GET` | `/api/orders/me` | Yes (`Bearer <token>`) | `user` / `admin` | `200 OK` | Retrieve current authenticated user's orders |
-| `GET` | `/api/orders` | Yes (`Bearer <token>`) | `admin` | `200 OK` | Retrieve all orders across system |
-| `PATCH` | `/api/orders/{id}/status` | Yes (`Bearer <token>`) | `admin` | `200 OK` / `404` | Update order status (`PENDING`, `PROCESSING`, `COMPLETED`) |
+| Method  | Endpoint                  | Authentication         | Required Role    | Status Code      | Description                                                |
+| ------- | ------------------------- | ---------------------- | ---------------- | ---------------- | ---------------------------------------------------------- |
+| `GET`   | `/health`                 | No                     | Public           | `200 OK`         | Service health probe (`{"status": "ok"}`)                  |
+| `GET`   | `/api/products`           | No                     | Public           | `200 OK`         | List all available demo products                           |
+| `GET`   | `/api/products/{id}`      | No                     | Public           | `200 OK` / `404` | Get single product by ID                                   |
+| `POST`  | `/api/orders`             | Yes (`Bearer <token>`) | `user` / `admin` | `201 Created`    | Create new order for authenticated user                    |
+| `GET`   | `/api/orders/me`          | Yes (`Bearer <token>`) | `user` / `admin` | `200 OK`         | Retrieve current authenticated user's orders               |
+| `GET`   | `/api/orders`             | Yes (`Bearer <token>`) | `admin`          | `200 OK`         | Retrieve all orders across system                          |
+| `PATCH` | `/api/orders/{id}/status` | Yes (`Bearer <token>`) | `admin`          | `200 OK` / `404` | Update order status (`PENDING`, `PROCESSING`, `COMPLETED`) |
 
 ---
 
 ## 💡 13. Example Requests & Responses
 
 ### 1. List Products (`GET /api/products`)
+
 ```bash
 curl http://localhost:8002/api/products
 ```
+
 **Response (`200 OK`)**:
+
 ```json
 [
   {
     "id": 1,
     "name": "Demo Product A",
-    "price": 10.00
+    "price": 10.0
   },
   {
     "id": 2,
     "name": "Demo Product B",
-    "price": 20.00
+    "price": 20.0
   },
   {
     "id": 3,
     "name": "Demo Product C",
-    "price": 30.00
+    "price": 30.0
   }
 ]
 ```
@@ -209,6 +218,7 @@ curl http://localhost:8002/api/products
 ---
 
 ### 2. Create Order (`POST /api/orders`)
+
 ```bash
 curl -X POST http://localhost:8002/api/orders \
   -H "Authorization: Bearer <user-jwt-access-token>" \
@@ -218,7 +228,9 @@ curl -X POST http://localhost:8002/api/orders \
     "quantity": 2
   }'
 ```
+
 **Response (`201 Created`)**:
+
 ```json
 {
   "id": 1,
@@ -226,7 +238,7 @@ curl -X POST http://localhost:8002/api/orders \
   "product": {
     "id": 1,
     "name": "Demo Product A",
-    "price": 10.00
+    "price": 10.0
   },
   "quantity": 2,
   "status": "PENDING",
@@ -237,11 +249,14 @@ curl -X POST http://localhost:8002/api/orders \
 ---
 
 ### 3. Get My Orders (`GET /api/orders/me`)
+
 ```bash
 curl -X GET http://localhost:8002/api/orders/me \
   -H "Authorization: Bearer <user-jwt-access-token>"
 ```
+
 **Response (`200 OK`)**:
+
 ```json
 [
   {
@@ -249,7 +264,7 @@ curl -X GET http://localhost:8002/api/orders/me \
     "product": {
       "id": 1,
       "name": "Demo Product A",
-      "price": 10.00
+      "price": 10.0
     },
     "quantity": 2,
     "status": "PENDING",
@@ -261,11 +276,14 @@ curl -X GET http://localhost:8002/api/orders/me \
 ---
 
 ### 4. Admin: Get All Orders (`GET /api/orders`)
+
 ```bash
 curl -X GET http://localhost:8002/api/orders \
   -H "Authorization: Bearer <admin-jwt-access-token>"
 ```
+
 **Response (`200 OK`)**:
+
 ```json
 [
   {
@@ -274,7 +292,7 @@ curl -X GET http://localhost:8002/api/orders \
     "product": {
       "id": 1,
       "name": "Demo Product A",
-      "price": 10.00
+      "price": 10.0
     },
     "quantity": 2,
     "status": "PENDING",
@@ -286,6 +304,7 @@ curl -X GET http://localhost:8002/api/orders \
 ---
 
 ### 5. Admin: Update Order Status (`PATCH /api/orders/{id}/status`)
+
 ```bash
 curl -X PATCH http://localhost:8002/api/orders/1/status \
   -H "Authorization: Bearer <admin-jwt-access-token>" \
@@ -294,7 +313,9 @@ curl -X PATCH http://localhost:8002/api/orders/1/status \
     "status": "PROCESSING"
   }'
 ```
+
 **Response (`200 OK`)**:
+
 ```json
 {
   "id": 1,
@@ -302,7 +323,7 @@ curl -X PATCH http://localhost:8002/api/orders/1/status \
   "product": {
     "id": 1,
     "name": "Demo Product A",
-    "price": 10.00
+    "price": 10.0
   },
   "quantity": 2,
   "status": "PROCESSING",
@@ -313,10 +334,13 @@ curl -X PATCH http://localhost:8002/api/orders/1/status \
 ---
 
 ### 6. Health Check (`GET /health`)
+
 ```bash
 curl http://localhost:8002/health
 ```
+
 **Response (`200 OK`)**:
+
 ```json
 {
   "status": "ok"

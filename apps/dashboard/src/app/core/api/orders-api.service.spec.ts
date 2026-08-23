@@ -12,7 +12,7 @@ describe('OrdersApiService', () => {
   beforeEach(() => {
     TestBed.configureTestingModule({
       imports: [HttpClientTestingModule],
-      providers: [OrdersApiService]
+      providers: [OrdersApiService],
     });
 
     service = TestBed.inject(OrdersApiService);
@@ -26,7 +26,7 @@ describe('OrdersApiService', () => {
   it('should fetch product catalog', () => {
     const mockProducts: Product[] = [
       { id: 1, name: 'Demo Product A', price: 10.0 },
-      { id: 2, name: 'Demo Product B', price: 20.0 }
+      { id: 2, name: 'Demo Product B', price: 20.0 },
     ];
 
     service.getProducts().subscribe((products) => {
@@ -47,8 +47,8 @@ describe('OrdersApiService', () => {
         product: { id: 1, name: 'Demo Product A', price: 10.0 },
         quantity: 2,
         status: 'PENDING',
-        createdAt: '2026-08-23T00:00:00Z'
-      }
+        createdAt: '2026-08-23T00:00:00Z',
+      },
     ];
 
     service.getAllOrders().subscribe((orders) => {
@@ -69,7 +69,7 @@ describe('OrdersApiService', () => {
       product: { id: 1, name: 'Demo Product A', price: 10.0 },
       quantity: 2,
       status: 'PROCESSING',
-      createdAt: '2026-08-23T00:00:00Z'
+      createdAt: '2026-08-23T00:00:00Z',
     };
 
     service.updateOrderStatus(1, 'PROCESSING').subscribe((res) => {

@@ -17,8 +17,8 @@ describe('authInterceptor', () => {
       providers: [
         { provide: AuthService, useValue: authServiceSpy },
         provideHttpClient(withInterceptors([authInterceptor])),
-        provideHttpClientTesting()
-      ]
+        provideHttpClientTesting(),
+      ],
     });
 
     httpClient = TestBed.inject(HttpClient);
@@ -56,7 +56,7 @@ describe('authInterceptor', () => {
     httpClient.get(`${environment.ordersServiceUrl}/api/orders`).subscribe({
       error: () => {
         expect(authServiceSpy.logout).toHaveBeenCalled();
-      }
+      },
     });
 
     const req = httpMock.expectOne(`${environment.ordersServiceUrl}/api/orders`);

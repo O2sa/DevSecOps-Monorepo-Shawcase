@@ -7,6 +7,7 @@ The **DevSecOps Web Portal** is the primary public client frontend of the DevSec
 ## 🎯 1. Application Purpose
 
 The **Web Portal** serves as the user-facing interface allowing visitors and customers to:
+
 - Browse products available in the product catalog.
 - Register a user account with the **Django Identity Service**.
 - Authenticate and receive stateless JWT access & refresh tokens.
@@ -62,15 +63,15 @@ The **Web Portal** serves as the user-facing interface allowing visitors and cus
 
 ## 📄 4. Pages & Routes
 
-| Route | Access | Purpose | Integrated Backend Service |
-|---|---|---|---|
-| `/` | Public | Platform overview, status highlights, quick action cards | - |
-| `/register` | Public | User registration form | Identity Service (`POST /api/auth/register`) |
-| `/login` | Public | User login form | Identity Service (`POST /api/auth/login`) |
-| `/products` | Public / Auth | Product catalog browsing and order placement | Orders Service (`GET /api/products`, `POST /api/orders`) |
-| `/orders` | **Protected** | Personal order history table | Orders Service (`GET /api/orders/me`) |
+| Route            | Access        | Purpose                                                  | Integrated Backend Service                                                           |
+| ---------------- | ------------- | -------------------------------------------------------- | ------------------------------------------------------------------------------------ |
+| `/`              | Public        | Platform overview, status highlights, quick action cards | -                                                                                    |
+| `/register`      | Public        | User registration form                                   | Identity Service (`POST /api/auth/register`)                                         |
+| `/login`         | Public        | User login form                                          | Identity Service (`POST /api/auth/login`)                                            |
+| `/products`      | Public / Auth | Product catalog browsing and order placement             | Orders Service (`GET /api/products`, `POST /api/orders`)                             |
+| `/orders`        | **Protected** | Personal order history table                             | Orders Service (`GET /api/orders/me`)                                                |
 | `/notifications` | **Protected** | Notifications inbox with All/Unread filter and Mark Read | Notification Service (`GET /api/notifications`, `PATCH /api/notifications/:id/read`) |
-| `/api/health` | Public | Web portal health probe (`{"status": "ok"}`) | Next.js API Route |
+| `/api/health`    | Public        | Web portal health probe (`{"status": "ok"}`)             | Next.js API Route                                                                    |
 
 ---
 
@@ -94,10 +95,10 @@ The **Web Portal** serves as the user-facing interface allowing visitors and cus
 
 ## 🔗 6. Backend Service Dependencies
 
-| Service | Environment Variable | Default URL |
-|---|---|---|
-| **Identity Service** | `NEXT_PUBLIC_IDENTITY_SERVICE_URL` | `http://localhost:8001` |
-| **Orders Service** | `NEXT_PUBLIC_ORDERS_SERVICE_URL` | `http://localhost:8002` |
+| Service                  | Environment Variable                   | Default URL             |
+| ------------------------ | -------------------------------------- | ----------------------- |
+| **Identity Service**     | `NEXT_PUBLIC_IDENTITY_SERVICE_URL`     | `http://localhost:8001` |
+| **Orders Service**       | `NEXT_PUBLIC_ORDERS_SERVICE_URL`       | `http://localhost:8002` |
 | **Notification Service** | `NEXT_PUBLIC_NOTIFICATION_SERVICE_URL` | `http://localhost:8003` |
 
 ---
@@ -105,21 +106,25 @@ The **Web Portal** serves as the user-facing interface allowing visitors and cus
 ## 🚀 7. How to Run Locally
 
 ### Prerequisites
+
 - Node.js 20+ and npm.
 
 ### Installation
+
 ```bash
 cd apps/web
 npm install
 ```
 
 ### Start Development Server
+
 ```bash
 npm run dev
 # Live at http://localhost:3000
 ```
 
 ### Production Build
+
 ```bash
 npm run build
 npm start

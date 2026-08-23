@@ -8,7 +8,7 @@ import { User } from '../../core/models/auth.model';
   standalone: true,
   imports: [CommonModule],
   templateUrl: './users.component.html',
-  styleUrls: []
+  styleUrls: [],
 })
 export class UsersComponent implements OnInit {
   private identityApi = inject(IdentityApiService);
@@ -32,8 +32,11 @@ export class UsersComponent implements OnInit {
       },
       error: (err) => {
         this.isLoading = false;
-        this.errorMessage = err.error?.detail || err.error?.message || 'Failed to retrieve user directory from Identity Service.';
-      }
+        this.errorMessage =
+          err.error?.detail ||
+          err.error?.message ||
+          'Failed to retrieve user directory from Identity Service.';
+      },
     });
   }
 }
