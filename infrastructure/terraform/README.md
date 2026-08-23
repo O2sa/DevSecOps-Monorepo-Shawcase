@@ -1,27 +1,30 @@
 # Terraform Infrastructure-as-Code (`infrastructure/terraform`)
 
-> [!NOTE]
-> **Phase 9 DevSecOps Target**: Terraform modules and cloud provisioning code are intentionally not implemented in Phase 1.
+This directory contains modular Terraform configurations for deterministically provisioning cloud/VPS compute nodes, networking, firewalls, and Kubernetes cluster infrastructure.
+
+For the full responsibility matrix separating Terraform from Kubernetes workloads, see [docs/architecture/infrastructure-architecture.md](file:///c:/Users/msii/Documents/devsecops_monorepo/docs/architecture/infrastructure-architecture.md).
 
 ---
 
-## 🎯 Planned Structure & Responsibilities
-
-When implemented in **Phase 9 (IaC Security & Cloud Provisioning)**, this directory will contain:
+## 🎯 Directory Layout
 
 ```
 infrastructure/terraform/
-├── modules/
-│   ├── vpc/                    # Secure VPC with private subnets
-│   ├── eks-cluster/            # Managed Kubernetes cluster
-│   ├── ecr/                    # Container registry with immutability & KMS encryption
-│   ├── database/               # Managed PostgreSQL / RDS with encryption at rest
-│   └── iam/                    # Least-privilege IAM roles and policies
-├── environments/
-│   ├── dev/                    # Dev environment state & variables
-│   ├── staging/                # Staging environment
-│   └── prod/                   # Production environment
-└── README.md
+├── modules/                      # Reusable infrastructure modules
+│   ├── networking/               # VPC, subnets, and routing tables
+│   ├── compute/                  # Virtual machines / Node pools
+│   ├── security/                 # Cloud security groups and firewall rules
+│   └── kubernetes-cluster/       # K3s / Cloud Kubernetes cluster bootstrap
+│
+└── environments/                 # Environment-specific configuration
+    ├── staging/                  # Staging cloud infrastructure
+    │   ├── main.tf
+    │   ├── variables.tf
+    │   └── terraform.tfvars
+    └── production/               # Production cloud infrastructure
+        ├── main.tf
+        ├── variables.tf
+        └── terraform.tfvars
 ```
 
 ---
@@ -29,6 +32,6 @@ infrastructure/terraform/
 ## 🔒 Planned IaC Security Controls
 
 - **Static Analysis**: Automated scanning with `checkov`, `tfsec`, and `trivy config`.
-- **Cost & Drift Estimation**: `infracost` in pull request checks.
-- **State File Security**: Encrypted remote backend (S3/GCS with KMS encryption and DynamoDB state locking).
-- **CIS Benchmark Compliance**: Enforcing cloud security baselines across VPC, IAM, and compute resources.
+- **Cost & Drift Estimation**: `infracost` automated budget impact analysis.
+- **State File Security**: Encrypted remote backend with KMS encryption and state locking.
+- **Least Privilege IAM**: Narrowly scoped cloud credentials for CI deployment runners.
