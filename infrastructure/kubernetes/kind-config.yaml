@@ -1,0 +1,31 @@
+# ==============================================================================
+# Local Kind (Kubernetes in Docker) Cluster Configuration
+# ==============================================================================
+# Multi-node local cluster with host port bindings for Ingress Controller
+# ==============================================================================
+
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+name: devsecops-cluster
+nodes:
+  # 1. Control Plane Node with Ingress Port Mappings
+  - role: control-plane
+    kubeadmConfigPatches:
+      - |
+        kind: InitConfiguration
+        nodeRegistration:
+          kubeletExtraArgs:
+            node-labels: "ingress-ready=true"
+    extraPortMappings:
+      - containerPort: 80
+        hostPort: 80
+        protocol: TCP
+      - containerPort: 443
+        hostPort: 443
+        protocol: TCP
+
+  # 2. Worker Node 1
+  - role: worker
+
+  # 3. Worker Node 2
+  - role: worker

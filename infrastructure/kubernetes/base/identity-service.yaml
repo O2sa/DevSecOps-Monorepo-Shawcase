@@ -1,0 +1,139 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: identity-service-config
+  namespace: devsecops
+  labels:
+    app.kubernetes.io/name: identity-service
+    app.kubernetes.io/part-of: devsecops-monorepo
+data:
+  PORT: '8001'
+  DJANGO_DEBUG: 'False'
+  DJANGO_ALLOWED_HOSTS: '*'
+  CORS_ALLOWED_ORIGINS: 'http://localhost:3000,http://localhost:4200,https://store.devsecops.local,https://admin.devsecops.local'
+  DB_NAME: '/app/data/db.sqlite3'
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: identity-service-secret
+  namespace: devsecops
+  labels:
+    app.kubernetes.io/name: identity-service
+    app.kubernetes.io/part-of: devsecops-monorepo
+type: Opaque
+stringData:
+  DJANGO_SECRET_KEY: 'devsecops-k8s-secret-key-identity-service-token-signing-key-min-256-bits'
+  DJANGO_SUPERUSER_USERNAME: 'admin'
+  DJANGO_SUPERUSER_EMAIL: 'admin@devsecops.local'
+  DJANGO_SUPERUSER_PASSWORD: 'AdminPassword123!'
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: identity-data-pvc
+  namespace: devsecops
+  labels:
+    app.kubernetes.io/name: identity-service
+    app.kubernetes.io/part-of: devsecops-monorepo
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: identity-service
+  namespace: devsecops
+  labels:
+    app.kubernetes.io/name: identity-service
+    app.kubernetes.io/component: authentication-authority
+    app.kubernetes.io/part-of: devsecops-monorepo
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: identity-service
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: identity-service
+        app.kubernetes.io/part-of: devsecops-monorepo
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1001
+        runAsGroup: 1001
+        fsGroup: 1001
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: identity-service
+          image: ghcr.io/o2sa/devsecops-identity-service:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 8001
+              protocol: TCP
+          envFrom:
+            - configMapRef:
+                name: identity-service-config
+            - secretRef:
+                name: identity-service-secret
+          volumeMounts:
+            - name: data-volume
+              mountPath: /app/data
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 300m
+              memory: 256Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: false
+            capabilities:
+              drop:
+                - ALL
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 15
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 3
+      volumes:
+        - name: data-volume
+          persistentVolumeClaim:
+            claimName: identity-data-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: identity-service
+  namespace: devsecops
+  labels:
+    app.kubernetes.io/name: identity-service
+    app.kubernetes.io/part-of: devsecops-monorepo
+spec:
+  type: ClusterIP
+  ports:
+    - name: http
+      port: 8001
+      targetPort: http
+      protocol: TCP
+  selector:
+    app.kubernetes.io/name: identity-service

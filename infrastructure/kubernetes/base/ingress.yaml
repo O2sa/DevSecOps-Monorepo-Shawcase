@@ -1,0 +1,91 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: devsecops-ingress
+  namespace: devsecops
+  labels:
+    app.kubernetes.io/name: devsecops-ingress
+    app.kubernetes.io/part-of: devsecops-monorepo
+  annotations:
+    ingress.kubernetes.io/ssl-redirect: 'false'
+spec:
+  rules:
+    # 1. Public Storefront Web Portal
+    - host: store.devsecops.local
+      http:
+        paths:
+          - path: /api/auth
+            pathType: Prefix
+            backend:
+              service:
+                name: identity-service
+                port:
+                  number: 8001
+          - path: /api/orders
+            pathType: Prefix
+            backend:
+              service:
+                name: orders-service
+                port:
+                  number: 8002
+          - path: /api/products
+            pathType: Prefix
+            backend:
+              service:
+                name: orders-service
+                port:
+                  number: 8002
+          - path: /api/notifications
+            pathType: Prefix
+            backend:
+              service:
+                name: notification-service
+                port:
+                  number: 8003
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: web
+                port:
+                  number: 3000
+
+    # 2. Operations & Admin Console
+    - host: admin.devsecops.local
+      http:
+        paths:
+          - path: /api/auth
+            pathType: Prefix
+            backend:
+              service:
+                name: identity-service
+                port:
+                  number: 8001
+          - path: /api/orders
+            pathType: Prefix
+            backend:
+              service:
+                name: orders-service
+                port:
+                  number: 8002
+          - path: /api/products
+            pathType: Prefix
+            backend:
+              service:
+                name: orders-service
+                port:
+                  number: 8002
+          - path: /api/notifications
+            pathType: Prefix
+            backend:
+              service:
+                name: notification-service
+                port:
+                  number: 8003
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: dashboard
+                port:
+                  number: 8080

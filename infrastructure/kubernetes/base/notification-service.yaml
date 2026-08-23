@@ -1,0 +1,118 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: notification-service-config
+  namespace: devsecops
+  labels:
+    app.kubernetes.io/name: notification-service
+    app.kubernetes.io/part-of: devsecops-monorepo
+data:
+  NODE_ENV: 'production'
+  PORT: '8003'
+  CORS_ALLOWED_ORIGINS: 'http://localhost:3000,http://localhost:4200,https://store.devsecops.local,https://admin.devsecops.local'
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: notification-service-secret
+  namespace: devsecops
+  labels:
+    app.kubernetes.io/name: notification-service
+    app.kubernetes.io/part-of: devsecops-monorepo
+type: Opaque
+stringData:
+  JWT_SECRET: 'devsecops-k8s-secret-key-identity-service-token-signing-key-min-256-bits'
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: notification-service
+  namespace: devsecops
+  labels:
+    app.kubernetes.io/name: notification-service
+    app.kubernetes.io/component: notification-dispatcher
+    app.kubernetes.io/part-of: devsecops-monorepo
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: notification-service
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: notification-service
+        app.kubernetes.io/part-of: devsecops-monorepo
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: notification-service
+          image: ghcr.io/o2sa/devsecops-notification-service:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 8003
+              protocol: TCP
+          envFrom:
+            - configMapRef:
+                name: notification-service-config
+            - secretRef:
+                name: notification-service-secret
+          volumeMounts:
+            - name: tmp-volume
+              mountPath: /tmp
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 200m
+              memory: 128Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 3
+      volumes:
+        - name: tmp-volume
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: notification-service
+  namespace: devsecops
+  labels:
+    app.kubernetes.io/name: notification-service
+    app.kubernetes.io/part-of: devsecops-monorepo
+spec:
+  type: ClusterIP
+  ports:
+    - name: http
+      port: 8003
+      targetPort: http
+      protocol: TCP
+  selector:
+    app.kubernetes.io/name: notification-service

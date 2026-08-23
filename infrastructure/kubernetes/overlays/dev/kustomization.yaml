@@ -1,0 +1,26 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: devsecops-dev
+
+resources:
+  - ../../base
+
+namePrefix: dev-
+
+images:
+  - name: ghcr.io/o2sa/devsecops-identity-service
+    newName: devsecops-identity-service
+    newTag: local
+  - name: ghcr.io/o2sa/devsecops-orders-service
+    newName: devsecops-orders-service
+    newTag: local
+  - name: ghcr.io/o2sa/devsecops-notification-service
+    newName: devsecops-notification-service
+    newTag: local
+  - name: ghcr.io/o2sa/devsecops-web
+    newName: devsecops-web
+    newTag: local
+  - name: ghcr.io/o2sa/devsecops-dashboard
+    newName: devsecops-dashboard
+    newTag: local
