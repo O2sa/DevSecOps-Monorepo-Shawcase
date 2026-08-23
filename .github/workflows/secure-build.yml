@@ -13,6 +13,7 @@ permissions:
   packages: write
   id-token: write
   attestations: write
+  security-events: write
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -20,7 +21,7 @@ concurrency:
 
 jobs:
   build-and-sign-images:
-    name: 'Build, Attest & Sign Container Images'
+    name: 'Build, Scan, Attest & Sign Container Images'
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -105,7 +106,44 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      # 8. Generate Software Bill of Materials (SBOM) in SPDX JSON format via Syft
+      # 8. Scan Built Container Image with Trivy (OS + App dependencies + Misconfigs)
+      - name: Run Trivy Container Security Scan (SARIF Report)
+        uses: aquasecurity/trivy-action@master
+        env:
+          TRIVY_USERNAME: ${{ github.actor }}
+          TRIVY_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          scan-type: 'image'
+          image-ref: '${{ steps.repo.outputs.image_name }}@${{ steps.build-push.outputs.digest }}'
+          format: 'sarif'
+          output: 'trivy-container-results.sarif'
+          severity: 'CRITICAL,HIGH,MEDIUM'
+          trivyignores: '.trivyignore'
+
+      # 9. Upload Container Security SARIF Report to GitHub Security Tab
+      - name: Upload Container Scan SARIF Report
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: 'trivy-container-results.sarif'
+          category: 'trivy-container-${{ matrix.service.name }}'
+        continue-on-error: true
+
+      # 10. Enforce Container Security Policy Gate (Fail on unexempted CRITICAL vulnerabilities)
+      - name: Enforce Container Vulnerability Policy Gate
+        uses: aquasecurity/trivy-action@master
+        env:
+          TRIVY_USERNAME: ${{ github.actor }}
+          TRIVY_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          scan-type: 'image'
+          image-ref: '${{ steps.repo.outputs.image_name }}@${{ steps.build-push.outputs.digest }}'
+          format: 'table'
+          exit-code: '1'
+          severity: 'CRITICAL'
+          trivyignores: '.trivyignore'
+
+      # 11. Generate Software Bill of Materials (SBOM) in SPDX JSON format via Syft
       - name: Generate SPDX SBOM
         uses: anchore/sbom-action@v0
         with:
@@ -115,14 +153,14 @@ jobs:
           format: spdx-json
           output-file: ${{ matrix.service.name }}-sbom.spdx.json
 
-      # 9. Upload generated SBOM as GitHub Actions build artifact
+      # 12. Upload generated SBOM as GitHub Actions build artifact
       - name: Upload SBOM Build Artifact
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.service.name }}-sbom
           path: ${{ matrix.service.name }}-sbom.spdx.json
 
-      # 10. Cryptographically attest SBOM to the immutable container image digest
+      # 13. Cryptographically attest SBOM to the immutable container image digest
       - name: Attest SBOM to Container Image
         uses: actions/attest-sbom@v1
         with:
@@ -131,7 +169,7 @@ jobs:
           sbom-path: ${{ matrix.service.name }}-sbom.spdx.json
           push-to-registry: true
 
-      # 11. Generate SLSA Build Provenance Attestation
+      # 14. Generate SLSA Build Provenance Attestation
       - name: Attest Build Provenance
         uses: actions/attest-build-provenance@v1
         with:
@@ -139,7 +177,7 @@ jobs:
           subject-digest: ${{ steps.build-push.outputs.digest }}
           push-to-registry: true
 
-      # 12. Sign container image digest using Sigstore Cosign with Keyless OIDC
+      # 15. Sign container image digest using Sigstore Cosign with Keyless OIDC
       - name: Sign Container Image Digest (Keyless OIDC)
         run: |
           echo "Signing immutable image digest: ${{ steps.repo.outputs.image_name }}@${{ steps.build-push.outputs.digest }}"

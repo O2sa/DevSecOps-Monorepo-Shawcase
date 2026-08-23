@@ -1,0 +1,13 @@
+# ==============================================================================
+# DevSecOps Monorepo - Trivy Vulnerability & Misconfiguration Allowlist (.trivyignore)
+# ==============================================================================
+#
+# POLICY:
+# - All exceptions must include: CVE ID, affected package, reason/justification, and review date.
+# - Broad ignores (e.g. ignoring entire severity classes) are strictly prohibited.
+# - Exceptions are reviewed periodically against upstream vendor patches.
+#
+# Format:
+# <CVE-ID> # <Package> - <Justification> (Review: YYYY-MM-DD)
+# ==============================================================================
+

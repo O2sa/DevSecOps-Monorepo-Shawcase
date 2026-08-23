@@ -1,7 +1,6 @@
 # DevSecOps Multi-Technology Showcase Monorepo
 
 Welcome to the **DevSecOps Showcase Monorepo**. This repository demonstrates a complete, production-minded polyglot microservice ecosystem orchestrated with Docker Compose, featuring five interconnected applications, stateless JWT authentication, role-based access control, cross-origin communication, resilient service-to-service event dispatching, and Shift-Left DevSecOps Security Gates.
-Welcome to the **DevSecOps Showcase Monorepo**. This repository demonstrates a complete, production-minded polyglot microservice ecosystem orchestrated with Docker Compose, featuring five interconnected applications, stateless JWT authentication, role-based access control, cross-origin communication, resilient service-to-service event dispatching, and Shift-Left DevSecOps Security Gates.
 
 ---
 
@@ -72,8 +71,6 @@ Commit Accepted (or Blocked with actionable diagnostics)
 
 ### Developer Commands
 
-### Developer Commands
-
 | Command                      | Purpose                                                                          |
 | ---------------------------- | -------------------------------------------------------------------------------- |
 | `pnpm check`                 | Aggregates all local gates: format check, linting, and secret scan               |
@@ -111,7 +108,7 @@ Publish to GitHub Container Registry (GHCR)
     ↓
 Extract Immutable Image Digest (@sha256:...)
     ├── 1. Generate SPDX SBOM via Syft (anchore/sbom-action)
-    ├── 2. Attest SBOM to GHCR Image (actions/attest-sboms)
+    ├── 2. Attest SBOM to GHCR Image (actions/attest-sbom)
     ├── 3. Attest SLSA Build Provenance (actions/attest-build-provenance)
     └── 4. Keyless Image Signing with Sigstore Cosign (OIDC Token)
 ```
@@ -156,6 +153,50 @@ gh attestation verify \
   oci://ghcr.io/o2sa/devsecops-identity-service:latest \
   --repo O2sa/DevSecOps-Monorepo-Shawcase \
   --format json | jq '.[] | select(.predicateType | contains("spdx"))'
+```
+
+---
+
+## 🛡️ Container Security & Image Vulnerability Scanning (Shift-Left Gate 4)
+
+This phase scans the **actual built container images** for OS vulnerabilities (Debian/Alpine packages), embedded application dependencies, base image vulnerabilities, and Dockerfile misconfigurations before artifacts are considered trusted.
+
+```
+Build Container Image
+    ↓
+Trivy Image Scan (OS Packages + Application Libraries + Misconfig)
+    ├── Output SARIF Report to GitHub Security Tab
+    └── Enforce Severity Gate (CRITICAL blocks pipeline)
+    ↓
+Pass Severity Policy?
+    ├── ❌ Fails: Pipeline Blocked (No SBOM Attestation / No Cosign Signing)
+    └── ✅ Passes: Generate SBOM, Provenance & Keyless Sign
+```
+
+### Dependency Scanning (SCA) vs. Container Scanning
+
+| Security Aspect | Dependency Scanning (CI Gate)                                                 | Container Security Scanning (Build Gate)                                                     |
+| --------------- | ----------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| **Target**      | Source dependency manifests (`pnpm-lock.yaml`, `requirements.txt`, `pom.xml`) | Actual built OCI container images (`ghcr.io/...@sha256:...`)                                 |
+| **Coverage**    | Direct & transitive application libraries                                     | OS packages (apk, dpkg), system libraries, runtime binaries, and container misconfigurations |
+| **Gating**      | PR validation                                                                 | Blocks artifact attestation and cryptographic signing on unpatched critical flaws            |
+
+### Vulnerability Severity & Enforcement Policy
+
+- **`CRITICAL`**: **Blocks the build pipeline** (`exit-code: '1'`). Halts image attestation and signing.
+- **`HIGH`**: Evaluated against [.trivyignore](file:///c:/Users/msii/Documents/devsecops_monorepo/.trivyignore). Unexempted issues are reported in SARIF.
+- **`MEDIUM` / `LOW`**: Cataloged in GitHub Code Scanning (SARIF) and GitHub Actions Step Summaries for ongoing visibility.
+
+### Running Local Container Image Security Scans
+
+Developers can scan local Docker images before pushing:
+
+```bash
+# Scan a locally built container image
+trivy image devsecops-identity-service:latest
+
+# Scan with severity filtering and misconfiguration checks
+trivy image --severity CRITICAL,HIGH --scanners vuln,misconfig devsecops-web:latest
 ```
 
 ---
