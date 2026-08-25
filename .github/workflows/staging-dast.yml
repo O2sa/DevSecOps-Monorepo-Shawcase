@@ -15,6 +15,7 @@ permissions:
   id-token: write
   actions: read
   security-events: write
+  issues: write
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -184,6 +185,7 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           target: 'http://localhost:3000'
           issue_title: 'DAST Security Alert: Web Portal'
+          allow_issue_writing: false
           cmd_options: '-a -m 2'
           fail_action: false
 
@@ -202,6 +204,7 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           target: 'http://localhost:4200'
           issue_title: 'DAST Security Alert: Admin Dashboard'
+          allow_issue_writing: false
           cmd_options: '-a -m 2'
           fail_action: false
 
@@ -220,6 +223,7 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           target: 'http://localhost:8001/api/auth/login'
           issue_title: 'DAST Security Alert: Identity Service'
+          allow_issue_writing: false
           cmd_options: '-a -m 2'
           fail_action: false
 
@@ -238,6 +242,7 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           target: 'http://localhost:8002/api/products'
           issue_title: 'DAST Security Alert: Orders Service'
+          allow_issue_writing: false
           cmd_options: '-a -m 2'
           fail_action: false
 
@@ -256,6 +261,7 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           target: 'http://localhost:8003/api/notifications'
           issue_title: 'DAST Security Alert: Notification Service'
+          allow_issue_writing: false
           cmd_options: '-a -m 2'
           fail_action: false
 
