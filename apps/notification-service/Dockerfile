@@ -3,20 +3,20 @@
 # ==============================================================================
 
 # 1. Builder stage
-FROM node:20-alpine AS builder
+FROM node:22-alpine AS builder
 
 WORKDIR /app
 
 RUN npm install -g pnpm@10.29.2
 
-COPY package.json pnpm-lock.yaml tsconfig.json ./
-RUN pnpm install --frozen-lockfile
+COPY package.json tsconfig.json ./
+RUN pnpm install
 
 COPY src ./src
 RUN pnpm run build
 
 # 2. Production runner stage
-FROM node:20-alpine AS runner
+FROM node:22-alpine AS runner
 
 WORKDIR /app
 
@@ -25,8 +25,8 @@ ENV PORT=8003
 
 RUN npm install -g pnpm@10.29.2
 
-COPY package.json pnpm-lock.yaml ./
-RUN pnpm install --prod --frozen-lockfile
+COPY package.json ./
+RUN pnpm install --prod
 
 # Copy compiled JavaScript output from builder stage
 COPY --from=builder --chown=node:node /app/dist ./dist

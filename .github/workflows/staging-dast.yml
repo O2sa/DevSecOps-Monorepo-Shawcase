@@ -40,7 +40,7 @@ jobs:
 
       # 3. Setup Sigstore Cosign for keyless image verification
       - name: Install Cosign
-        uses: sigstore/cosign-installer@v3.5.0
+        uses: sigstore/cosign-installer@v3.8.1
 
       # 4. Authenticate to GitHub Container Registry (GHCR)
       - name: Log in to GitHub Container Registry

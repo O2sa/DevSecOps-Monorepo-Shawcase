@@ -67,7 +67,7 @@ jobs:
 
       # 3. Setup Sigstore Cosign for keyless OIDC container signing
       - name: Install Cosign
-        uses: sigstore/cosign-installer@v3.5.0
+        uses: sigstore/cosign-installer@v3.8.1
 
       # 4. Setup Docker Buildx with GHA caching support
       - name: Setup Docker Buildx
@@ -96,7 +96,7 @@ jobs:
       # 7. Build and push image to GHCR from pure source code
       - name: Build and Push Image to GHCR
         id: build-push
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           context: ${{ matrix.service.context }}
           file: ${{ matrix.service.file }}
@@ -164,7 +164,7 @@ jobs:
 
       # 13. Cryptographically attest SBOM to the immutable container image digest
       - name: Attest SBOM to Container Image
-        uses: actions/attest-sbom@v1
+        uses: actions/attest-sbom@v2
         with:
           subject-name: ${{ steps.repo.outputs.image_name }}
           subject-digest: ${{ steps.build-push.outputs.digest }}
@@ -173,7 +173,7 @@ jobs:
 
       # 14. Generate SLSA Build Provenance Attestation
       - name: Attest Build Provenance
-        uses: actions/attest-build-provenance@v1
+        uses: actions/attest-build-provenance@v2
         with:
           subject-name: ${{ steps.repo.outputs.image_name }}
           subject-digest: ${{ steps.build-push.outputs.digest }}

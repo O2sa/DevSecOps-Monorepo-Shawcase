@@ -3,13 +3,13 @@
 # ==============================================================================
 
 # 1. Build stage
-FROM node:20-alpine AS builder
+FROM node:22-alpine AS builder
 WORKDIR /app
 
 RUN npm install -g pnpm@10.29.2
 
-COPY package.json pnpm-lock.yaml ./
-RUN pnpm install --frozen-lockfile
+COPY package.json ./
+RUN pnpm install
 
 COPY . .
 RUN pnpm run build --configuration production

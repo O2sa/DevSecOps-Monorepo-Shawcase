@@ -15,15 +15,21 @@
     "check": "pnpm format:check && pnpm lint && pnpm scan:secrets"
   },
   "devDependencies": {
-    "@commitlint/cli": "^19.3.0",
-    "@commitlint/config-conventional": "^19.2.2",
-    "husky": "^9.0.11",
-    "lint-staged": "^15.2.7",
-    "prettier": "^3.3.2"
+    "@commitlint/cli": "^19.7.1",
+    "@commitlint/config-conventional": "^19.7.1",
+    "husky": "^9.1.7",
+    "lint-staged": "^15.4.3",
+    "prettier": "^3.5.2"
   },
   "pnpm": {
     "overrides": {
-      "tar": "^7.5.19"
+      "tar": "^7.5.19",
+      "postcss": "^8.5.3",
+      "nanoid": "^3.3.8",
+      "cross-spawn": "^7.0.6",
+      "micromatch": "^4.0.8",
+      "braces": "^3.0.3",
+      "ws": "^8.18.1"
     }
   }
 }
