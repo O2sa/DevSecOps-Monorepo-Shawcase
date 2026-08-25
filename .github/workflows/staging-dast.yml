@@ -13,6 +13,7 @@ permissions:
   contents: read
   packages: read
   id-token: write
+  actions: read
   security-events: write
 
 concurrency:
@@ -49,29 +50,106 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      # 5. Pre-Deployment Gate: Cryptographically verify Cosign signatures on all 5 images
+      # 5. Resolve immutable image digests produced by Secure Build workflow
+      - name: Resolve Immutable Image Digests
+        id: digests
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          mkdir -p ./digests
+          if [ "${{ github.event_name }}" = "workflow_run" ]; then
+            RUN_ID="${{ github.event.workflow_run.id }}"
+            echo "Fetching image digests from triggering workflow_run ID: ${RUN_ID}"
+          else
+            RUN_ID=$(gh run list --workflow "secure-build.yml" --status success --branch main --limit 1 --json databaseId --jq '.[0].databaseId // empty')
+            if [ -z "$RUN_ID" ]; then
+              RUN_ID=$(gh run list --workflow "secure-build.yml" --status success --limit 1 --json databaseId --jq '.[0].databaseId // empty')
+            fi
+            echo "Fetching image digests from latest successful secure-build run ID: ${RUN_ID}"
+          fi
+
+          if [ -n "$RUN_ID" ]; then
+            gh run download "$RUN_ID" -p "*-digest" -D ./digests || true
+          fi
+
+          read_digest() {
+            local svc="$1"
+            local file=$(find ./digests -type f -name "${svc}-digest.txt" 2>/dev/null | head -n 1)
+            if [ -n "$file" ] && [ -s "$file" ]; then
+              cat "$file" | tr -d '\r\n '
+            else
+              echo ""
+            fi
+          }
+
+          IDENTITY_IMG=$(read_digest "identity-service")
+          ORDERS_IMG=$(read_digest "orders-service")
+          NOTIFICATION_IMG=$(read_digest "notification-service")
+          WEB_IMG=$(read_digest "web")
+          DASHBOARD_IMG=$(read_digest "dashboard")
+
+          if [ -z "$IDENTITY_IMG" ] || [ -z "$ORDERS_IMG" ] || [ -z "$NOTIFICATION_IMG" ] || [ -z "$WEB_IMG" ] || [ -z "$DASHBOARD_IMG" ]; then
+            echo "❌ Error: Could not resolve immutable image digests for all 5 services from build run (${RUN_ID})."
+            echo "Resolved digest references:"
+            echo "  identity-service:     ${IDENTITY_IMG:-MISSING}"
+            echo "  orders-service:       ${ORDERS_IMG:-MISSING}"
+            echo "  notification-service: ${NOTIFICATION_IMG:-MISSING}"
+            echo "  web:                  ${WEB_IMG:-MISSING}"
+            echo "  dashboard:            ${DASHBOARD_IMG:-MISSING}"
+            exit 1
+          fi
+
+          echo "✅ Successfully resolved exact immutable image digests:"
+          echo "  Identity:     ${IDENTITY_IMG}"
+          echo "  Orders:       ${ORDERS_IMG}"
+          echo "  Notification: ${NOTIFICATION_IMG}"
+          echo "  Web:          ${WEB_IMG}"
+          echo "  Dashboard:    ${DASHBOARD_IMG}"
+
+          echo "identity_image=${IDENTITY_IMG}" >> $GITHUB_OUTPUT
+          echo "orders_image=${ORDERS_IMG}" >> $GITHUB_OUTPUT
+          echo "notification_image=${NOTIFICATION_IMG}" >> $GITHUB_OUTPUT
+          echo "web_image=${WEB_IMG}" >> $GITHUB_OUTPUT
+          echo "dashboard_image=${DASHBOARD_IMG}" >> $GITHUB_OUTPUT
+
+      # 6. Pre-Deployment Gate: Cryptographically verify Cosign signatures on exact image digests
       - name: Verify Container Image Signatures
         run: |
-          echo "Verifying cryptographic signatures on trusted container images..."
-          SERVICES=("devsecops-identity-service" "devsecops-orders-service" "devsecops-notification-service" "devsecops-web" "devsecops-dashboard")
-          for svc in "${SERVICES[@]}"; do
-            echo "--> Verifying signature for: ${{ steps.repo.outputs.prefix }}/${svc}:latest"
+          echo "Verifying cryptographic signatures on exact immutable container images..."
+          IMAGES=(
+            "${{ steps.digests.outputs.identity_image }}"
+            "${{ steps.digests.outputs.orders_image }}"
+            "${{ steps.digests.outputs.notification_image }}"
+            "${{ steps.digests.outputs.web_image }}"
+            "${{ steps.digests.outputs.dashboard_image }}"
+          )
+          for img in "${IMAGES[@]}"; do
+            echo "--> Verifying signature for: ${img}"
             cosign verify \
               --certificate-identity-regexp "https://github.com/${{ github.repository_owner }}/.*" \
               --certificate-oidc-issuer "https://token.actions.githubusercontent.com" \
-              "${{ steps.repo.outputs.prefix }}/${svc}:latest" || echo "Note: Initial signature verification warning for ${svc}"
+              "${img}"
           done
+          echo "✅ All 5 immutable container image signatures verified successfully."
 
-      # 6. Deploy Ephemeral Staging Environment via Docker Compose
+      # 7. Deploy Ephemeral Staging Environment via Docker Compose
       - name: Deploy Staging Stack
         env:
-          IMAGE_PREFIX: ${{ steps.repo.outputs.prefix }}
-          IMAGE_TAG: latest
+          IDENTITY_IMAGE: ${{ steps.digests.outputs.identity_image }}
+          ORDERS_IMAGE: ${{ steps.digests.outputs.orders_image }}
+          NOTIFICATION_IMAGE: ${{ steps.digests.outputs.notification_image }}
+          WEB_IMAGE: ${{ steps.digests.outputs.web_image }}
+          DASHBOARD_IMAGE: ${{ steps.digests.outputs.dashboard_image }}
         run: |
-          echo "Starting isolated staging environment from trusted images..."
+          echo "Starting isolated staging environment from verified immutable images:"
+          echo "  Identity:     ${IDENTITY_IMAGE}"
+          echo "  Orders:       ${ORDERS_IMAGE}"
+          echo "  Notification: ${NOTIFICATION_IMAGE}"
+          echo "  Web:          ${WEB_IMAGE}"
+          echo "  Dashboard:    ${DASHBOARD_IMAGE}"
           docker compose -f docker-compose.staging.yml up -d
 
-      # 7. Application Readiness Verification (Poll HTTP endpoints directly with timeout)
+      # 8. Application Readiness Verification (Poll HTTP endpoints directly with timeout)
       - name: Wait for Application Readiness
         timeout-minutes: 3
         run: |
@@ -94,12 +172,12 @@ jobs:
           docker compose -f docker-compose.staging.yml logs
           exit 1
 
-      # 8. Execute Pre-DAST Functional Smoke Tests
+      # 9. Execute Pre-DAST Functional Smoke Tests
       - name: Run Functional Smoke Tests
         run: |
           node scripts/smoke-tests.js
 
-      # 9. Dynamic Application Security Testing (DAST) - Web Portal Scan
+      # 10. Dynamic Application Security Testing (DAST) - Web Portal Scan
       - name: OWASP ZAP DAST - Web Portal Scan
         uses: zaproxy/action-baseline@v0.14.0
         with:
@@ -109,7 +187,15 @@ jobs:
           cmd_options: '-a -m 2'
           fail_action: false
 
-      # 10. Dynamic Application Security Testing (DAST) - Admin Dashboard Scan
+      - name: Save Web Portal DAST Report
+        if: always()
+        run: |
+          mkdir -p dast-reports/web
+          [ -f report_html.html ] && mv report_html.html dast-reports/web/ || true
+          [ -f report_json.json ] && mv report_json.json dast-reports/web/ || true
+          [ -f report_md.md ] && mv report_md.md dast-reports/web/ || true
+
+      # 11. Dynamic Application Security Testing (DAST) - Admin Dashboard Scan
       - name: OWASP ZAP DAST - Dashboard Scan
         uses: zaproxy/action-baseline@v0.14.0
         with:
@@ -119,49 +205,83 @@ jobs:
           cmd_options: '-a -m 2'
           fail_action: false
 
-      # 11. Dynamic Application Security Testing (DAST) - Backend Identity API Scan
+      - name: Save Admin Dashboard DAST Report
+        if: always()
+        run: |
+          mkdir -p dast-reports/dashboard
+          [ -f report_html.html ] && mv report_html.html dast-reports/dashboard/ || true
+          [ -f report_json.json ] && mv report_json.json dast-reports/dashboard/ || true
+          [ -f report_md.md ] && mv report_md.md dast-reports/dashboard/ || true
+
+      # 12. Dynamic Application Security Testing (DAST) - Backend Identity API Scan
       - name: OWASP ZAP DAST - Identity Service API Scan
         uses: zaproxy/action-baseline@v0.14.0
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          target: 'http://localhost:8001/health'
+          target: 'http://localhost:8001/api/auth/login'
           issue_title: 'DAST Security Alert: Identity Service'
           cmd_options: '-a -m 2'
           fail_action: false
 
-      # 12. Dynamic Application Security Testing (DAST) - Backend Orders API Scan
+      - name: Save Identity Service DAST Report
+        if: always()
+        run: |
+          mkdir -p dast-reports/identity
+          [ -f report_html.html ] && mv report_html.html dast-reports/identity/ || true
+          [ -f report_json.json ] && mv report_json.json dast-reports/identity/ || true
+          [ -f report_md.md ] && mv report_md.md dast-reports/identity/ || true
+
+      # 13. Dynamic Application Security Testing (DAST) - Backend Orders API Scan
       - name: OWASP ZAP DAST - Orders Service API Scan
         uses: zaproxy/action-baseline@v0.14.0
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          target: 'http://localhost:8002/health'
+          target: 'http://localhost:8002/api/products'
           issue_title: 'DAST Security Alert: Orders Service'
           cmd_options: '-a -m 2'
           fail_action: false
 
-      # 13. Dynamic Application Security Testing (DAST) - Backend Notification API Scan
+      - name: Save Orders Service DAST Report
+        if: always()
+        run: |
+          mkdir -p dast-reports/orders
+          [ -f report_html.html ] && mv report_html.html dast-reports/orders/ || true
+          [ -f report_json.json ] && mv report_json.json dast-reports/orders/ || true
+          [ -f report_md.md ] && mv report_md.md dast-reports/orders/ || true
+
+      # 14. Dynamic Application Security Testing (DAST) - Backend Notification API Scan
       - name: OWASP ZAP DAST - Notification Service API Scan
         uses: zaproxy/action-baseline@v0.14.0
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          target: 'http://localhost:8003/health'
+          target: 'http://localhost:8003/api/notifications'
           issue_title: 'DAST Security Alert: Notification Service'
           cmd_options: '-a -m 2'
           fail_action: false
 
-      # 14. Upload DAST Reports as CI Build Artifacts
+      - name: Save Notification Service DAST Report
+        if: always()
+        run: |
+          mkdir -p dast-reports/notification
+          [ -f report_html.html ] && mv report_html.html dast-reports/notification/ || true
+          [ -f report_json.json ] && mv report_json.json dast-reports/notification/ || true
+          [ -f report_md.md ] && mv report_md.md dast-reports/notification/ || true
+
+      # 15. Upload DAST Security Reports as Artifacts (Always executed to preserve audit trail)
       - name: Upload DAST Security Reports
         uses: actions/upload-artifact@v4
         if: always()
         with:
           name: dast-security-reports
-          path: |
-            report_html.html
-            report_json.json
-            report_md.md
+          path: dast-reports/
           if-no-files-found: ignore
 
-      # 15. Teardown Staging Environment
+      # 16. Enforce DAST Security Policy Gate (Fail on High/Critical findings)
+      - name: Enforce DAST Security Policy Gate
+        run: |
+          node scripts/evaluate-dast-policy.js dast-reports
+
+      # 17. Teardown Staging Stack
       - name: Teardown Staging Stack
         if: always()
         run: |

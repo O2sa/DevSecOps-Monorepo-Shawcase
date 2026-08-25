@@ -7,7 +7,7 @@
 services:
   # 1. Identity Service (Django)
   identity-service:
-    image: ${IMAGE_PREFIX:-ghcr.io/o2sa}/devsecops-identity-service:${IMAGE_TAG:-latest}
+    image: ${IDENTITY_IMAGE:-${IMAGE_PREFIX:-ghcr.io/o2sa}/devsecops-identity-service:${IMAGE_TAG:-latest}}
     container_name: staging-identity-service
     restart: unless-stopped
     ports:
@@ -42,7 +42,7 @@ services:
 
   # 2. Notification Service (Express + TypeScript)
   notification-service:
-    image: ${IMAGE_PREFIX:-ghcr.io/o2sa}/devsecops-notification-service:${IMAGE_TAG:-latest}
+    image: ${NOTIFICATION_IMAGE:-${IMAGE_PREFIX:-ghcr.io/o2sa}/devsecops-notification-service:${IMAGE_TAG:-latest}}
     container_name: staging-notification-service
     restart: unless-stopped
     ports:
@@ -69,7 +69,7 @@ services:
 
   # 3. Orders Service (Spring Boot)
   orders-service:
-    image: ${IMAGE_PREFIX:-ghcr.io/o2sa}/devsecops-orders-service:${IMAGE_TAG:-latest}
+    image: ${ORDERS_IMAGE:-${IMAGE_PREFIX:-ghcr.io/o2sa}/devsecops-orders-service:${IMAGE_TAG:-latest}}
     container_name: staging-orders-service
     restart: unless-stopped
     ports:
@@ -99,7 +99,7 @@ services:
 
   # 4. Public Client Application (Next.js Web Portal)
   web:
-    image: ${IMAGE_PREFIX:-ghcr.io/o2sa}/devsecops-web:${IMAGE_TAG:-latest}
+    image: ${WEB_IMAGE:-${IMAGE_PREFIX:-ghcr.io/o2sa}/devsecops-web:${IMAGE_TAG:-latest}}
     container_name: staging-web
     restart: unless-stopped
     ports:
@@ -129,7 +129,7 @@ services:
 
   # 5. Admin / Operations Dashboard (Angular)
   dashboard:
-    image: ${IMAGE_PREFIX:-ghcr.io/o2sa}/devsecops-dashboard:${IMAGE_TAG:-latest}
+    image: ${DASHBOARD_IMAGE:-${IMAGE_PREFIX:-ghcr.io/o2sa}/devsecops-dashboard:${IMAGE_TAG:-latest}}
     container_name: staging-dashboard
     restart: unless-stopped
     ports:

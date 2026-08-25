@@ -11,6 +11,7 @@
     "lint:python": "node scripts/lint-python.js",
     "scan:secrets": "node scripts/scan-secrets.js",
     "smoke:test": "node scripts/smoke-tests.js",
+    "dast:evaluate": "node scripts/evaluate-dast-policy.js",
     "check": "pnpm format:check && pnpm lint && pnpm scan:secrets"
   },
   "devDependencies": {

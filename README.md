@@ -94,6 +94,7 @@ Commit Accepted (or Blocked with actionable diagnostics)
 | `pnpm scan:secrets`          | Runs full-workspace secret scanning                                              |
 | `pnpm scan:secrets --staged` | Scans only staged files (executed by `pre-commit` hook)                          |
 | `pnpm smoke:test`            | Runs functional smoke tests against running services                             |
+| `pnpm dast:evaluate`         | Evaluates structured OWASP ZAP DAST reports against security policy gate         |
 
 ---
 
@@ -140,11 +141,14 @@ Extract Immutable Image Digest (@sha256:...)
 
 ### 2. Verifying Image Signatures with Cosign
 
+Verify signatures on published container images using Sigstore Cosign (keyless OIDC). The staging workflow enforces this check against exact immutable image digests (`@sha256:...`) before deploying:
+
 ```bash
+# Verify by exact immutable image digest
 cosign verify \
   --certificate-identity-regexp "https://github.com/O2sa/DevSecOps-Monorepo-Shawcase/.*" \
   --certificate-oidc-issuer "https://token.actions.githubusercontent.com" \
-  ghcr.io/o2sa/devsecops-identity-service:latest
+  ghcr.io/o2sa/devsecops-identity-service@sha256:<digest>
 ```
 
 ---
@@ -161,29 +165,33 @@ Scans the **actual built container images** for OS vulnerabilities (Debian/Alpin
 
 ## 🌐 Staging Deployment & Dynamic Application Security Testing (Shift-Left Gate 5)
 
-Deploys the trusted container images into an isolated, ephemeral staging environment and performs automated security testing against the **running applications** (`.github/workflows/staging-dast.yml`):
+Deploys the trusted container images into an isolated, ephemeral staging environment using exact immutable image digests and performs automated security testing against the **running applications and REST APIs** (`.github/workflows/staging-dast.yml`):
 
 ```
-Trusted & Signed Container Images
+Secure Build Image Digest Artifacts
     ↓
-Pre-Deployment Verification (cosign verify)
+Resolve Exact Immutable Image Digests (@sha256:...)
     ↓
-Deploy to Staging (docker-compose.staging.yml)
+Pre-Deployment Verification (cosign verify - strictly blocks on failure)
     ↓
-Wait for Application Readiness (Health Probes)
+Deploy Ephemeral Staging (docker-compose.staging.yml with immutable digests)
+    ↓
+Wait for Application Readiness (Microservice Health Probes)
     ↓
 Functional Smoke Tests (scripts/smoke-tests.js)
     ↓
 Dynamic Application Security Testing (OWASP ZAP)
-    ├── Web App Baseline Scan (Next.js :3000 & Angular Dashboard :4200)
-    ├── Backend API Scan (Identity :8001, Orders :8002, Notifications :8003)
-    └── Security Header & Vulnerability Auditing
+    ├── Web App Baseline Scan (Next.js :3000)
+    ├── Admin Dashboard Scan (Angular :4200)
+    ├── Identity Service REST API Scan (:8001/api/auth/login)
+    ├── Orders Service REST API Scan (:8002/api/products)
+    └── Notification Service REST API Scan (:8003/api/notifications)
     ↓
-DAST Severity Policy Gate (Blocks on High/Critical)
+Upload All Isolated DAST Reports (dast-reports/*)
     ↓
-Upload DAST HTML/JSON Reports as Artifacts
+DAST Security Policy Gate (scripts/evaluate-dast-policy.js - blocks on High/Critical)
     ↓
-Teardown Staging Environment
+Teardown Staging Environment (docker compose down -v)
 ```
 
 ### Running Staging & DAST Locally
@@ -207,7 +215,13 @@ Teardown Staging Environment
      -t http://localhost:3000 -r zap-report.html
    ```
 
-4. **Teardown Staging Environment**:
+4. **Evaluate DAST Reports Against Security Policy**:
+
+   ```bash
+   pnpm dast:evaluate
+   ```
+
+5. **Teardown Staging Environment**:
    ```bash
    docker compose -f docker-compose.staging.yml down -v
    ```
