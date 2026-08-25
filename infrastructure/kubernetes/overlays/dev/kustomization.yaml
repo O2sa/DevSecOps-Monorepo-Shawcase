@@ -11,16 +11,16 @@ namePrefix: dev-
 images:
   - name: ghcr.io/o2sa/devsecops-identity-service
     newName: devsecops-identity-service
-    newTag: local
+    newTag: latest
   - name: ghcr.io/o2sa/devsecops-orders-service
     newName: devsecops-orders-service
-    newTag: local
+    newTag: latest
   - name: ghcr.io/o2sa/devsecops-notification-service
     newName: devsecops-notification-service
-    newTag: local
+    newTag: latest
   - name: ghcr.io/o2sa/devsecops-web
     newName: devsecops-web
-    newTag: local
+    newTag: latest
   - name: ghcr.io/o2sa/devsecops-dashboard
     newName: devsecops-dashboard
-    newTag: local
+    newTag: latest

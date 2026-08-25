@@ -10,6 +10,7 @@ name: devsecops-cluster
 nodes:
   # 1. Control Plane Node with Ingress Port Mappings
   - role: control-plane
+    image: kindest/node:v1.30.0
     kubeadmConfigPatches:
       - |
         kind: InitConfiguration
@@ -26,6 +27,8 @@ nodes:
 
   # 2. Worker Node 1
   - role: worker
+    image: kindest/node:v1.30.0
 
   # 3. Worker Node 2
   - role: worker
+    image: kindest/node:v1.30.0
