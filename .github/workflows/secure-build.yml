@@ -108,7 +108,7 @@ jobs:
 
       # 8. Scan Built Container Image with Trivy (OS + App dependencies + Misconfigs)
       - name: Run Trivy Container Security Scan (SARIF Report)
-        uses: aquasecurity/trivy-action@0.34.0
+        uses: aquasecurity/trivy-action@v0.36.0
         env:
           TRIVY_USERNAME: ${{ github.actor }}
           TRIVY_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
@@ -132,7 +132,7 @@ jobs:
 
       # 10. Enforce Container Security Policy Gate (Fail on unexempted CRITICAL vulnerabilities)
       - name: Enforce Container Vulnerability Policy Gate
-        uses: aquasecurity/trivy-action@0.34.0
+        uses: aquasecurity/trivy-action@v0.36.0
         env:
           TRIVY_USERNAME: ${{ github.actor }}
           TRIVY_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
@@ -147,7 +147,7 @@ jobs:
 
       # 11. Generate Software Bill of Materials (SBOM) in SPDX JSON format via Syft
       - name: Generate SPDX SBOM
-        uses: anchore/sbom-action@v0.18.0
+        uses: anchore/sbom-action@v0.24.0
         with:
           image: ${{ steps.repo.outputs.image_name }}@${{ steps.build-push.outputs.digest }}
           registry-username: ${{ github.actor }}
