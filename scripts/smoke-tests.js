@@ -92,9 +92,7 @@ async function runSmokeTests() {
       if (loginRes.status === 200) {
         const loginData = await loginRes.json();
         token = loginData.access;
-        console.log(
-          `  ✅ [PASS] User Login (${testUser.username}) -> HTTP 200 (JWT Acquired)`
-        );
+        console.log(`  ✅ [PASS] User Login (${testUser.username}) -> HTTP 200 (JWT Acquired)`);
         passedCount++;
       } else {
         const errText = await loginRes.text();
