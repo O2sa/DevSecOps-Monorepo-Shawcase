@@ -21,6 +21,9 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: false
 
+env:
+  ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION: 'true'
+
 jobs:
   staging-dast:
     name: 'Deploy Staging, Smoke Test & Run DAST'
@@ -186,6 +189,7 @@ jobs:
           target: 'http://localhost:3000'
           issue_title: 'DAST Security Alert: Web Portal'
           allow_issue_writing: false
+          artifact_name: 'zap_scan_web'
           cmd_options: '-a -m 2'
           fail_action: false
 
@@ -205,6 +209,7 @@ jobs:
           target: 'http://localhost:4200'
           issue_title: 'DAST Security Alert: Admin Dashboard'
           allow_issue_writing: false
+          artifact_name: 'zap_scan_dashboard'
           cmd_options: '-a -m 2'
           fail_action: false
 
@@ -224,6 +229,7 @@ jobs:
           target: 'http://localhost:8001/api/auth/login'
           issue_title: 'DAST Security Alert: Identity Service'
           allow_issue_writing: false
+          artifact_name: 'zap_scan_identity'
           cmd_options: '-a -m 2'
           fail_action: false
 
@@ -243,6 +249,7 @@ jobs:
           target: 'http://localhost:8002/api/products'
           issue_title: 'DAST Security Alert: Orders Service'
           allow_issue_writing: false
+          artifact_name: 'zap_scan_orders'
           cmd_options: '-a -m 2'
           fail_action: false
 
@@ -262,6 +269,7 @@ jobs:
           target: 'http://localhost:8003/api/notifications'
           issue_title: 'DAST Security Alert: Notification Service'
           allow_issue_writing: false
+          artifact_name: 'zap_scan_notification'
           cmd_options: '-a -m 2'
           fail_action: false
 
