@@ -15,11 +15,11 @@
     "check": "pnpm format:check && pnpm lint && pnpm scan:secrets"
   },
   "devDependencies": {
-    "@commitlint/cli": "^19.7.1",
-    "@commitlint/config-conventional": "^19.7.1",
+    "@commitlint/cli": "^19.8.1",
+    "@commitlint/config-conventional": "^19.8.1",
     "husky": "^9.1.7",
-    "lint-staged": "^15.4.3",
-    "prettier": "^3.5.2"
+    "lint-staged": "^15.5.2",
+    "prettier": "^3.9.6"
   },
   "pnpm": {
     "overrides": {
