@@ -21,10 +21,6 @@ export default function ProductsPage() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
-  useEffect(() => {
-    fetchProducts();
-  }, []);
-
   const fetchProducts = async () => {
     setIsLoading(true);
     setErrorMessage(null);
@@ -45,6 +41,10 @@ export default function ProductsPage() {
       setIsLoading(false);
     }
   };
+
+  useEffect(() => {
+    fetchProducts();
+  }, []);
 
   const handleQuantityChange = (productId: number, qty: number) => {
     setQuantities((prev) => ({

@@ -14,10 +14,6 @@ function NotificationsContent() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
-  useEffect(() => {
-    fetchNotifications(tab);
-  }, [tab]);
-
   const fetchNotifications = async (currentTab: 'all' | 'unread') => {
     setIsLoading(true);
     setErrorMessage(null);
@@ -37,6 +33,10 @@ function NotificationsContent() {
       setIsLoading(false);
     }
   };
+
+  useEffect(() => {
+    fetchNotifications(tab);
+  }, [tab]);
 
   const handleMarkAsRead = async (id: number) => {
     setMarkingId(id);

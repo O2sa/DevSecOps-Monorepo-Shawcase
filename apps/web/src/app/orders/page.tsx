@@ -12,10 +12,6 @@ function OrdersContent() {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  useEffect(() => {
-    fetchOrders();
-  }, []);
-
   const fetchOrders = async () => {
     setIsLoading(true);
     setErrorMessage(null);
@@ -28,6 +24,10 @@ function OrdersContent() {
       setIsLoading(false);
     }
   };
+
+  useEffect(() => {
+    fetchOrders();
+  }, []);
 
   const getStatusBadge = (status: string) => {
     const s = status.toUpperCase();

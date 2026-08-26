@@ -16,16 +16,13 @@ function LoginForm() {
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [infoMessage, setInfoMessage] = useState<string | null>(null);
-
+  const [infoDismissed, setInfoDismissed] = useState(false);
   const redirectUrl = searchParams ? searchParams.get('redirect') || '/products' : '/products';
   const isRegistered = searchParams ? searchParams.get('registered') === 'true' : false;
-
-  useEffect(() => {
-    if (isRegistered) {
-      setInfoMessage('Account created successfully! Please log in with your credentials.');
-    }
-  }, [isRegistered]);
+  const infoMessage =
+    isRegistered && !infoDismissed
+      ? 'Account created successfully! Please log in with your credentials.'
+      : null;
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -50,7 +47,9 @@ function LoginForm() {
       if (err instanceof ApiError) {
         setErrorMessage(err.message);
       } else {
-        setErrorMessage(err.message || 'Invalid credentials or unable to reach Identity Service.');
+        setErrorMessage(
+          err.message || 'Login failed. Please check your credentials and try again.'
+        );
       }
     } finally {
       setIsLoading(false);
@@ -66,7 +65,7 @@ function LoginForm() {
         </p>
 
         {infoMessage && (
-          <Alert type="success" message={infoMessage} onClose={() => setInfoMessage(null)} />
+          <Alert type="success" message={infoMessage} onClose={() => setInfoDismissed(true)} />
         )}
 
         {errorMessage && (

@@ -103,6 +103,7 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
         token = super().get_token(user)
 
         # Custom claims for microservice authorization
+        token['user_id'] = user.id
         token['username'] = user.username
         token['email'] = user.email
         token['role'] = user.role
