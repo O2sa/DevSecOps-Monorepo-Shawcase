@@ -1,6 +1,39 @@
-# DevSecOps Multi-Technology Showcase Monorepo
+<div align="center">
 
-Welcome to the **DevSecOps Showcase Monorepo**. This repository demonstrates a complete, production-minded polyglot microservice ecosystem orchestrated with Docker Compose, featuring five interconnected applications, stateless JWT authentication, role-based access control, cross-origin communication, resilient service-to-service event dispatching, and Shift-Left DevSecOps Security Gates.
+# 🛡️ Enterprise Polyglot DevSecOps Platform & Showcase
+
+[![CI Quality & Security](https://github.com/O2sa/DevSecOps-Monorepo-Shawcase/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/O2sa/DevSecOps-Monorepo-Shawcase/actions/workflows/ci.yml)
+[![Secure Build & Supply Chain](https://github.com/O2sa/DevSecOps-Monorepo-Shawcase/actions/workflows/secure-build.yml/badge.svg?branch=main)](https://github.com/O2sa/DevSecOps-Monorepo-Shawcase/actions/workflows/secure-build.yml)
+[![Staging & DAST](https://github.com/O2sa/DevSecOps-Monorepo-Shawcase/actions/workflows/staging-dast.yml/badge.svg?branch=main)](https://github.com/O2sa/DevSecOps-Monorepo-Shawcase/actions/workflows/staging-dast.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![SLSA: Level 3](https://img.shields.io/badge/SLSA-Level_3_Provenance-success.svg?logo=securityscorecard&logoColor=white)](https://slsa.dev)
+[![Security: Cosign Signed](https://img.shields.io/badge/Sigstore-Cosign_Signed-blueviolet.svg?logo=sigstore&logoColor=white)](https://sigstore.dev)
+
+**A reference-grade, end-to-end polyglot microservice ecosystem showcasing zero-trust cloud-native architecture, automated Shift-Left security gates, cryptographic supply chain provenance, and continuous vulnerability scanning.**
+
+[Architecture](#-system-architecture) • [Microservices Matrix](#-applications--technology-matrix) • [Security Pipeline](#-5-stage-shift-left-devsecops-pipeline) • [Supply Chain & SLSA](#-supply-chain-security--cryptographic-verification) • [Quickstart](#-quickstart-guide)
+
+---
+
+</div>
+
+## 🌟 Highlights & Capabilities
+
+- **🚀 Modern Polyglot Microservices**:
+  - **Public Storefront Web Portal**: Next.js 16 (Turbopack) & React 19 with ESLint 9 Flat Config.
+  - **Admin Operations Dashboard**: Angular 22, TypeScript 6, Zone.js, and Nginx.
+  - **Identity & Auth Service**: Django 6.1 (Python 3.12), Django REST Framework 3.18, and Stateless JWT.
+  - **Orders Service**: Spring Boot 3.4.3 (Java 21 LTS), Spring Security 6.4.6, and Spring Data JPA.
+  - **Notification Service**: Express 5.2.1, Helmet 8.3, and TypeScript 5.9.
+- **🛡️ 5-Stage Shift-Left Security Pipeline**:
+  - **Gate 1 (Developer Pre-Commit)**: Husky, Prettier, ESLint 9, Python AST validation, and high-entropy secret scanner.
+  - **Gate 2 (CI & Static Analysis)**: Multi-layer Jest/JUnit/Django test suites (104 tests), Gitleaks history scanner, and Semgrep SAST.
+  - **Gate 3 (Secure Build & Supply Chain)**: Multi-arch Docker Buildx, CycloneDX/SPDX SBOM generation (Syft), SLSA Level 3 Build Provenance attestations, and Sigstore Cosign keyless image signing.
+  - **Gate 4 (Container Vulnerability Gate)**: Trivy OS & application vulnerability scanning blocking critical CVEs before deployment.
+  - **Gate 5 (Dynamic Staging & DAST Gate)**: Ephemeral Docker Compose staging deployment pinned to exact immutable `@sha256:...` digests, functional smoke testing suite, and OWASP ZAP active/passive DAST scans with custom policy enforcement gates.
+- **☸️ Cloud-Native & Kubernetes Infrastructure**:
+  - Declarative Kubernetes manifests with Kustomize overlays (`dev`, `staging`, `production`).
+  - Strict default-deny `NetworkPolicy` rules, non-root least-privilege Docker images, read-only root filesystems, and health probe configurations.
 
 ---
 
@@ -8,138 +41,106 @@ Welcome to the **DevSecOps Showcase Monorepo**. This repository demonstrates a c
 
 ```mermaid
 flowchart TD
-    subgraph Host / Browser Environment
-        Browser["User / Admin Web Browser"]
+    subgraph Client / Browser Environment
+        Browser["🌐 User & Administrator Browsers"]
     end
 
-    subgraph Docker Network: devsecops-network
-        Web["Web Portal<br/>(Next.js 14 / pnpm - Port 3000)"]
-        Dashboard["Admin Dashboard<br/>(Angular 18 / pnpm / Nginx - Port 4200:8080)"]
-        Identity["Identity Service<br/>(Django 5 - Port 8001)"]
-        Orders["Orders Service<br/>(Spring Boot 3 / Maven - Port 8002)"]
-        Notify["Notification Service<br/>(Express + TypeScript / pnpm - Port 8003)"]
-        Volume[("Persistent Storage<br/>identity-data volume")]
+    subgraph Ingress & Cloud-Native Runtime
+        Web["💻 Web Portal<br/><b>Next.js 16 / React 19</b><br/>Port 3000"]
+        Dashboard["📊 Admin Dashboard<br/><b>Angular 22 / Nginx</b><br/>Port 4200:8080"]
+        Identity["🔐 Identity Service<br/><b>Django 6.1 / Python 3.12</b><br/>Port 8001"]
+        Orders["📦 Orders Service<br/><b>Spring Boot 3.4 / Java 21</b><br/>Port 8002"]
+        Notify["🔔 Notification Service<br/><b>Express 5 / TypeScript</b><br/>Port 8003"]
+        Volume[("💾 Persistent SQLite Volume<br/>/app/data/db.sqlite3")]
     end
 
-    %% Browser direct access via mapped host ports
     Browser -->|"Public Storefront (Port 3000)"| Web
     Browser -->|"Operations Console (Port 4200)"| Dashboard
-    Browser -->|"Direct Client API (CORS)"| Identity
-    Browser -->|"Direct Client API (CORS)"| Orders
-    Browser -->|"Direct Client API (CORS)"| Notify
+    Browser -->|"Direct Client API (JWT / CORS)"| Identity
+    Browser -->|"Direct Client API (JWT / CORS)"| Orders
+    Browser -->|"Direct Client API (JWT / CORS)"| Notify
 
-    %% Service-to-service internal Docker communication
-    Orders -->|"Internal Events (/internal/notifications)"| Notify
-    Identity -.->|"Stores SQLite db.sqlite3"| Volume
+    Orders -->|"Internal Async Events (/internal/notifications)"| Notify
+    Identity -.->|"Persistent Database"| Volume
 ```
 
 ---
 
-## 📦 Applications & Port Matrix
+## 📦 Applications & Technology Matrix
 
-| Service                    | Application Directory       | Technology Stack & Package Manager         | Container Port | Host Port | Health Check Endpoint               |
-| -------------------------- | --------------------------- | ------------------------------------------ | -------------- | --------- | ----------------------------------- |
-| **`web`**                  | `apps/web`                  | Next.js 14 / React 18 (**pnpm**)           | `3000`         | `3000`    | `http://localhost:3000/api/health`  |
-| **`dashboard`**            | `apps/dashboard`            | Angular 18 (**pnpm** / Unprivileged Nginx) | `8080`         | `4200`    | `http://localhost:4200/health.json` |
-| **`identity-service`**     | `apps/identity-service`     | Django 5 & Gunicorn (Python 3.11 / pip)    | `8001`         | `8001`    | `http://localhost:8001/health`      |
-| **`orders-service`**       | `apps/orders-service`       | Spring Boot 3 (Java 21 JRE / Maven)        | `8002`         | `8002`    | `http://localhost:8002/health`      |
-| **`notification-service`** | `apps/notification-service` | Express.js / TypeScript (**pnpm**)         | `8003`         | `8003`    | `http://localhost:8003/health`      |
+| Application              | Directory                   | Framework & Runtime                                     | Package Manager | Port   | Health Check       |
+| :----------------------- | :-------------------------- | :------------------------------------------------------ | :-------------- | :----- | :----------------- |
+| **Web Portal**           | `apps/web`                  | **Next.js 16.3** + **React 19.2**                       | `pnpm 10`       | `3000` | `GET /api/health`  |
+| **Admin Dashboard**      | `apps/dashboard`            | **Angular 22.1** + **TypeScript 6**                     | `pnpm 10`       | `4200` | `GET /health.json` |
+| **Identity Service**     | `apps/identity-service`     | **Django 6.1** + **DRF 3.18** (Python 3.12)             | `pip`           | `8001` | `GET /health`      |
+| **Orders Service**       | `apps/orders-service`       | **Spring Boot 3.4** + **Spring Security 6.4** (Java 21) | `Maven`         | `8002` | `GET /health`      |
+| **Notification Service** | `apps/notification-service` | **Express 5.2** + **Helmet 8.3** (TypeScript 5.9)       | `pnpm 10`       | `8003` | `GET /health`      |
 
 ---
 
-## 🛡️ Complete DevSecOps Pipeline Flow
+## 🛡️ 5-Stage Shift-Left DevSecOps Pipeline
 
 ```mermaid
-flowchart TD
-    Dev["Developer"] -->|"git commit"| Gate1["1. Commit Gate (Husky, Prettier, ESLint, Secrets)"]
-    Gate1 -->|"git push / PR"| Gate2["2. CI Gate (Tests, Build, Semgrep SAST, Trivy SCA)"]
-    Gate2 -->|"Merge to main"| Gate3["3. Secure Build (Buildx, SBOM Syft, SLSA Provenance, Cosign Signing)"]
-    Gate3 --> Gate4["4. Container Image Scan (Trivy OS, App Libs & Misconfig)"]
-    Gate4 -->|"Passes Policy"| Gate5["5. Staging & DAST (Ephemeral Deploy, Smoke Tests, OWASP ZAP)"]
-    Gate5 -->|"Passes DAST Policy"| Prod["🚀 Ready for Production Promotion"]
+flowchart LR
+    G1["Gate 1<br/><b>Pre-Commit</b><br/>Husky & Secrets"] --> G2["Gate 2<br/><b>CI & Tests</b><br/>Semgrep & Gitleaks"]
+    G2 --> G3["Gate 3<br/><b>Secure Build</b><br/>SBOM & Cosign"]
+    G3 --> G4["Gate 4<br/><b>Container Scan</b><br/>Trivy CVE Gate"]
+    G4 --> G5["Gate 5<br/><b>Staging & DAST</b><br/>OWASP ZAP Gate"]
+    G5 --> Prod["🚀 <b>Production</b><br/>Verified & Signed"]
 ```
+
+### 1. Shift-Left Gate 1: Local Developer Environment
+
+- **Husky & Lint-Staged**: Enforces code style, TypeScript compiler validation, ESLint 9 checks, and Python syntax checks on every staged commit.
+- **Pre-Commit Secret Scanning**: [`scripts/scan-secrets.js`](file:///c:/Users/msii/Documents/devsecops_monorepo/scripts/scan-secrets.js) scans staged files for unencrypted secrets, private keys, and API tokens with strict entropy thresholds.
+- **Conventional Commits**: Enforced via `commitlint` for clean semantic changelogs.
+
+```bash
+pnpm check          # Run formatting, linting, and full secret scanning
+pnpm format         # Auto-format all code files with Prettier
+pnpm lint           # Execute ESLint 9 and Python AST checks
+pnpm scan:secrets   # Run monorepo-wide secret scanning
+```
+
+### 2. Shift-Left Gate 2: CI & Static Analysis (`ci.yml`)
+
+- Executes automated test suites: **104 passing tests** across Next.js, Angular, Express, Django, and Spring Boot.
+- **SAST**: Semgrep static application security testing scanning for OWASP Top 10 vulnerabilities.
+- **Secret Detection**: Gitleaks deep scanning over full repository git history and commit ranges.
+- **SCA**: Filesystem dependency auditing and automated security patch tracking.
+
+### 3. Shift-Left Gate 3: Secure Artifact Packaging (`secure-build.yml`)
+
+- Multi-arch container builds via Docker Buildx.
+- **SPDX / CycloneDX SBOM**: Automated Software Bill of Materials generated via Syft and attested via GitHub Actions (`actions/attest-sbom@v2`).
+- **SLSA Level 3 Provenance**: Cryptographically attested build provenance (`actions/attest-build-provenance@v2`).
+- **Keyless Container Signing**: All 5 container images signed using **Sigstore Cosign** via OIDC identity.
+- Exact immutable image digests (`@sha256:...`) extracted and exported as build artifacts.
+
+### 4. Shift-Left Gate 4: Container Vulnerability Scanner
+
+- **Trivy Image Scan**: Scans built container images for OS package vulnerabilities (Alpine/Debian) and application runtime dependencies.
+- Enforces strict blocking rules (`exit-code: 1`) on unresolved **Critical** CVEs.
+- High and Medium findings cataloged into GitHub Security Code Scanning (SARIF).
+
+### 5. Shift-Left Gate 5: Ephemeral Staging & DAST Gate (`staging-dast.yml`)
+
+- **Cosign Pre-Deployment Gate**: Staging workflow cryptographically verifies container signatures against immutable image digests before deploying.
+- **Ephemeral Staging Deployment**: Launches stack using exact `@sha256:...` digest references.
+- **Automated Smoke Tests**: [`scripts/smoke-tests.js`](file:///c:/Users/msii/Documents/devsecops_monorepo/scripts/smoke-tests.js) verifies health endpoints, frontend entrypoints, user registration, JWT acquisition, and authenticated service APIs.
+- **OWASP ZAP Dynamic Scans**:
+  - Web Portal UI Scan (`http://localhost:3000`)
+  - Admin Dashboard UI Scan (`http://localhost:4200`)
+  - Backend Identity API Scan (`http://localhost:8001/api/auth/login`)
+  - Backend Orders API Scan (`http://localhost:8002/api/products`)
+  - Backend Notification API Scan (`http://localhost:8003/api/notifications`)
+- **DAST Policy Evaluator**: [`scripts/evaluate-dast-policy.js`](file:///c:/Users/msii/Documents/devsecops_monorepo/scripts/evaluate-dast-policy.js) evaluates structured JSON/XML reports, uploading all findings as artifacts and blocking on High or Critical vulnerabilities.
 
 ---
 
-## 🛡️ Developer Security Workflow (Shift-Left Gate 1)
+## 🔐 Supply Chain Security & Cryptographic Verification
 
-This repository enforces automated quality and security checks locally before code is committed to Git:
-
-```
-Developer
-    ↓
-git add <files>
-    ↓
-git commit -m "feat(identity): add token refresh"
-    ↓
-Git Hooks (Husky)
-    ├── pre-commit: lint-staged
-    │     ├── Prettier code formatting
-    │     ├── ESLint & Python AST verification
-    │     └── Staged Secret Scanner (scripts/scan-secrets.js)
-    └── commit-msg: commitlint
-          └── Conventional Commits verification
-    ↓
-Commit Accepted (or Blocked with actionable diagnostics)
-```
-
-### Developer Commands
-
-| Command                      | Purpose                                                                          |
-| ---------------------------- | -------------------------------------------------------------------------------- |
-| `pnpm check`                 | Aggregates all local gates: format check, linting, and secret scan               |
-| `pnpm format`                | Automatically formats all TypeScript, JavaScript, JSON, YAML, and Markdown files |
-| `pnpm format:check`          | Verifies formatting compliance across the codebase without making changes        |
-| `pnpm lint`                  | Runs ESLint and Python AST syntax validation                                     |
-| `pnpm scan:secrets`          | Runs full-workspace secret scanning                                              |
-| `pnpm scan:secrets --staged` | Scans only staged files (executed by `pre-commit` hook)                          |
-| `pnpm smoke:test`            | Runs functional smoke tests against running services                             |
-| `pnpm dast:evaluate`         | Evaluates structured OWASP ZAP DAST reports against security policy gate         |
-
----
-
-## 🚀 CI / Pull Request Security Pipeline (Shift-Left Gate 2)
-
-Automated security verification and regression testing run on every Pull Request and Push to `main` via GitHub Actions (`.github/workflows/ci.yml`):
-
-- **Quality & Formatting**: Prettier format check and Next.js ESLint.
-- **Secret Detection Scan**: Defense-in-depth Gitleaks v2 scanner checking git history and repository diffs.
-- **Application Tests**: Automated Jest, Django (27 tests), and Spring Boot JUnit 5 (28 tests) execution.
-- **Build Validation**: Typechecking and production bundle compilation for all applications.
-- **SAST (Static Application Security Testing)**: Semgrep multi-language vulnerability analysis.
-- **Dependency Security (SCA)**: Trivy filesystem vulnerability audit and automated daily Dependabot PRs.
-
----
-
-## 🔐 Secure Build & Software Supply Chain (Shift-Left Gate 3)
-
-Trusted builds on `main` and release tags (`v*.*.*`) execute the secure artifact packaging pipeline (`.github/workflows/secure-build.yml`):
-
-```
-Push to main / Release Tag
-    ↓
-Docker Buildx (Multi-Image Build from Source)
-    ↓
-Publish to GitHub Container Registry (GHCR)
-    ↓
-Extract Immutable Image Digest (@sha256:...)
-    ├── 1. Generate SPDX SBOM via Syft (anchore/sbom-action)
-    ├── 2. Attest SBOM to GHCR Image (actions/attest-sbom)
-    ├── 3. Attest SLSA Build Provenance (actions/attest-build-provenance)
-    └── 4. Keyless Image Signing with Sigstore Cosign (OIDC Token)
-```
-
-### 1. Published Container Images
-
-| Application          | Container Registry URI                                  |
-| -------------------- | ------------------------------------------------------- |
-| Identity Service     | `ghcr.io/<owner>/devsecops-identity-service:latest`     |
-| Orders Service       | `ghcr.io/<owner>/devsecops-orders-service:latest`       |
-| Notification Service | `ghcr.io/<owner>/devsecops-notification-service:latest` |
-| Web Portal           | `ghcr.io/<owner>/devsecops-web:latest`                  |
-| Admin Dashboard      | `ghcr.io/<owner>/devsecops-dashboard:latest`            |
-
-### 2. Verifying Image Signatures with Cosign
+### Verifying Published Images with Sigstore Cosign
 
 Verify signatures on published container images using Sigstore Cosign (keyless OIDC). The staging workflow enforces this check against exact immutable image digests (`@sha256:...`) before deploying:
 
@@ -151,105 +152,83 @@ cosign verify \
   ghcr.io/o2sa/devsecops-identity-service@sha256:<digest>
 ```
 
----
-
-## 🛡️ Container Security & Image Vulnerability Scanning (Shift-Left Gate 4)
-
-Scans the **actual built container images** for OS vulnerabilities (Debian/Alpine packages), embedded application dependencies, base image vulnerabilities, and Dockerfile misconfigurations before artifacts are considered trusted.
-
-- **`CRITICAL`**: **Blocks the build pipeline** (`exit-code: '1'`). Halts image attestation and signing.
-- **`HIGH`**: Evaluated against [.trivyignore](file:///c:/Users/msii/Documents/devsecops_monorepo/.trivyignore). Unexempted issues are reported in SARIF.
-- **`MEDIUM` / `LOW`**: Cataloged in GitHub Code Scanning (SARIF) and GitHub Actions Step Summaries.
-
----
-
-## 🌐 Staging Deployment & Dynamic Application Security Testing (Shift-Left Gate 5)
-
-Deploys the trusted container images into an isolated, ephemeral staging environment using exact immutable image digests and performs automated security testing against the **running applications and REST APIs** (`.github/workflows/staging-dast.yml`):
-
-```
-Secure Build Image Digest Artifacts
-    ↓
-Resolve Exact Immutable Image Digests (@sha256:...)
-    ↓
-Pre-Deployment Verification (cosign verify - strictly blocks on failure)
-    ↓
-Deploy Ephemeral Staging (docker-compose.staging.yml with immutable digests)
-    ↓
-Wait for Application Readiness (Microservice Health Probes)
-    ↓
-Functional Smoke Tests (scripts/smoke-tests.js)
-    ↓
-Dynamic Application Security Testing (OWASP ZAP)
-    ├── Web App Baseline Scan (Next.js :3000)
-    ├── Admin Dashboard Scan (Angular :4200)
-    ├── Identity Service REST API Scan (:8001/api/auth/login)
-    ├── Orders Service REST API Scan (:8002/api/products)
-    └── Notification Service REST API Scan (:8003/api/notifications)
-    ↓
-Upload All Isolated DAST Reports (dast-reports/*)
-    ↓
-DAST Security Policy Gate (scripts/evaluate-dast-policy.js - blocks on High/Critical)
-    ↓
-Teardown Staging Environment (docker compose down -v)
-```
-
-### Running Staging & DAST Locally
-
-1. **Launch Staging Stack**:
-
-   ```bash
-   docker compose -f docker-compose.staging.yml up -d
-   ```
-
-2. **Verify Service Health & Smoke Tests**:
-
-   ```bash
-   pnpm smoke:test
-   ```
-
-3. **Run Local OWASP ZAP Baseline Scan (Docker)**:
-
-   ```bash
-   docker run --rm -t --net="host" zaproxy/zap-stable zap-baseline.py \
-     -t http://localhost:3000 -r zap-report.html
-   ```
-
-4. **Evaluate DAST Reports Against Security Policy**:
-
-   ```bash
-   pnpm dast:evaluate
-   ```
-
-5. **Teardown Staging Environment**:
-   ```bash
-   docker compose -f docker-compose.staging.yml down -v
-   ```
-
----
-
-## 🐳 Running the Stack with Docker Compose
-
-### 1. Clone & Configure Environment
-
-No pre-built host artifacts are required. The entire stack builds deterministically inside Docker from source:
+### Verifying SLSA Build Provenance
 
 ```bash
-git clone <repository>
-cd DevSecOps-Monorepo-Shawcase
-cp .env.example .env
+# Verify SLSA Provenance using GitHub CLI
+gh attestation verify oci://ghcr.io/o2sa/devsecops-orders-service@sha256:<digest> \
+  --owner O2sa
 ```
 
-### 2. Build & Launch Stack
+---
+
+## 🚀 Quickstart Guide
+
+### Prerequisites
+
+- [Node.js](https://nodejs.org/) `>= 22.0.0`
+- [pnpm](https://pnpm.io/) `>= 10.0.0`
+- [Docker & Docker Compose](https://www.docker.com/)
+- [Java 21 JDK](https://adoptium.net/) & [Python 3.12](https://www.python.org/) _(for local development without Docker)_
+
+### 1. Clone & Configure
+
+```bash
+git clone https://github.com/O2sa/DevSecOps-Monorepo-Shawcase.git
+cd DevSecOps-Monorepo-Shawcase
+cp .env.example .env
+pnpm install
+```
+
+### 2. Run All Tests Locally
+
+```bash
+pnpm check                # Run format, lint, and secret scanning
+pnpm -r --if-present test # Run Jest test suites (Web, Dashboard, Notifications)
+cd apps/identity-service && python manage.py test # Run Django test suite
+cd ../orders-service && ./mvnw test               # Run Spring Boot test suite
+```
+
+### 3. Launch Full Containerized Stack
 
 ```bash
 docker compose up --build -d
 ```
 
-### 3. Verify Container Health
+### 4. Verify Service Health & Run Smoke Tests
 
 ```bash
 docker compose ps
+pnpm smoke:test
 ```
 
-All 5 services should report `Up (healthy)`.
+### 5. Access Applications
+
+- **Web Storefront Portal**: [http://localhost:3000](http://localhost:3000)
+- **Admin Operations Dashboard**: [http://localhost:4200](http://localhost:4200)
+- **Identity Service**: [http://localhost:8001/health](http://localhost:8001/health)
+- **Orders Service**: [http://localhost:8002/health](http://localhost:8002/health)
+- **Notification Service**: [http://localhost:8003/health](http://localhost:8003/health)
+
+---
+
+## ☸️ Kubernetes Deployment
+
+Deploy the zero-trust stack to Kubernetes using Kustomize overlays:
+
+```bash
+# Development Overlay
+kubectl apply -k infrastructure/kubernetes/overlays/dev
+
+# Staging Overlay (Pinned immutable images & strict resource quotas)
+kubectl apply -k infrastructure/kubernetes/overlays/staging
+
+# Production Overlay (High-availability replicas & zero-trust network policies)
+kubectl apply -k infrastructure/kubernetes/overlays/production
+```
+
+---
+
+## 📄 License & Contributing
+
+This project is open-source under the [MIT License](LICENSE). Contributions, bug reports, and security enhancement PRs are welcome!
