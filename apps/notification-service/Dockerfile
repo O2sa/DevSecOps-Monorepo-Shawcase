@@ -3,7 +3,7 @@
 # ==============================================================================
 
 # 1. Builder stage
-FROM node:22-alpine AS builder
+FROM node:24-alpine AS builder
 
 WORKDIR /app
 
@@ -16,7 +16,7 @@ COPY src ./src
 RUN pnpm run build
 
 # 2. Production runner stage
-FROM node:22-alpine AS runner
+FROM node:24-alpine AS runner
 
 WORKDIR /app
 

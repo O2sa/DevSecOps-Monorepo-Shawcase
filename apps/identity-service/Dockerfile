@@ -1,7 +1,7 @@
 # ==============================================================================
 # Dockerfile for Django Identity Service
 # ==============================================================================
-FROM python:3.12-slim AS runner
+FROM python:3.13-slim AS runner
 
 WORKDIR /app
 

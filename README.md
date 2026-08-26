@@ -22,7 +22,7 @@
 - **🚀 Modern Polyglot Microservices**:
   - **Public Storefront Web Portal**: Next.js 16 (Turbopack) & React 19 with ESLint 9 Flat Config.
   - **Admin Operations Dashboard**: Angular 22, TypeScript 6, Zone.js, and Nginx.
-  - **Identity & Auth Service**: Django 6.1 (Python 3.12), Django REST Framework 3.18, and Stateless JWT.
+  - **Identity & Auth Service**: Django 6.1 (Python 3.13), Django REST Framework 3.18, and Stateless JWT.
   - **Orders Service**: Spring Boot 3.4.3 (Java 21 LTS), Spring Security 6.4.6, and Spring Data JPA.
   - **Notification Service**: Express 5.2.1, Helmet 8.3, and TypeScript 5.9.
 - **🛡️ 5-Stage Shift-Left Security Pipeline**:
@@ -48,7 +48,7 @@ flowchart TD
     subgraph Ingress & Cloud-Native Runtime
         Web["💻 Web Portal<br/><b>Next.js 16 / React 19</b><br/>Port 3000"]
         Dashboard["📊 Admin Dashboard<br/><b>Angular 22 / Nginx</b><br/>Port 4200:8080"]
-        Identity["🔐 Identity Service<br/><b>Django 6.1 / Python 3.12</b><br/>Port 8001"]
+        Identity["🔐 Identity Service<br/><b>Django 6.1 / Python 3.13</b><br/>Port 8001"]
         Orders["📦 Orders Service<br/><b>Spring Boot 3.4 / Java 21</b><br/>Port 8002"]
         Notify["🔔 Notification Service<br/><b>Express 5 / TypeScript</b><br/>Port 8003"]
         Volume[("💾 Persistent SQLite Volume<br/>/app/data/db.sqlite3")]
@@ -72,7 +72,7 @@ flowchart TD
 | :----------------------- | :-------------------------- | :------------------------------------------------------ | :-------------- | :----- | :----------------- |
 | **Web Portal**           | `apps/web`                  | **Next.js 16.3** + **React 19.2**                       | `pnpm 10`       | `3000` | `GET /api/health`  |
 | **Admin Dashboard**      | `apps/dashboard`            | **Angular 22.1** + **TypeScript 6**                     | `pnpm 10`       | `4200` | `GET /health.json` |
-| **Identity Service**     | `apps/identity-service`     | **Django 6.1** + **DRF 3.18** (Python 3.12)             | `pip`           | `8001` | `GET /health`      |
+| **Identity Service**     | `apps/identity-service`     | **Django 6.1** + **DRF 3.18** (Python 3.13)             | `pip`           | `8001` | `GET /health`      |
 | **Orders Service**       | `apps/orders-service`       | **Spring Boot 3.4** + **Spring Security 6.4** (Java 21) | `Maven`         | `8002` | `GET /health`      |
 | **Notification Service** | `apps/notification-service` | **Express 5.2** + **Helmet 8.3** (TypeScript 5.9)       | `pnpm 10`       | `8003` | `GET /health`      |
 
@@ -166,10 +166,10 @@ gh attestation verify oci://ghcr.io/o2sa/devsecops-orders-service@sha256:<digest
 
 ### Prerequisites
 
-- [Node.js](https://nodejs.org/) `>= 22.0.0`
+- [Node.js](https://nodejs.org/) `>= 24.0.0`
 - [pnpm](https://pnpm.io/) `>= 10.0.0`
 - [Docker & Docker Compose](https://www.docker.com/)
-- [Java 21 JDK](https://adoptium.net/) & [Python 3.12](https://www.python.org/) _(for local development without Docker)_
+- [Java 21 JDK](https://adoptium.net/) & [Python 3.13](https://www.python.org/) _(for local development without Docker)_
 
 ### 1. Clone & Configure
 
