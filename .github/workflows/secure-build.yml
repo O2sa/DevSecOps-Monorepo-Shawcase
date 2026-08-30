@@ -84,7 +84,7 @@ jobs:
       # 6. Extract metadata, tags, and labels for the container image
       - name: Extract Docker Image Metadata
         id: meta
-        uses: docker/metadata-action@v5
+        uses: docker/metadata-action@v6
         with:
           images: ${{ steps.repo.outputs.image_name }}
           tags: |
