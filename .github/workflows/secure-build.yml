@@ -96,7 +96,7 @@ jobs:
       # 7. Build and push image to GHCR from pure source code
       - name: Build and Push Image to GHCR
         id: build-push
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: ${{ matrix.service.context }}
           file: ${{ matrix.service.file }}
