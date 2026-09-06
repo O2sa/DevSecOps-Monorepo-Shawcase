@@ -164,7 +164,7 @@ jobs:
 
       # 13. Cryptographically attest SBOM to the immutable container image digest
       - name: Attest SBOM to Container Image
-        uses: actions/attest-sbom@v2
+        uses: actions/attest-sbom@v4
         with:
           subject-name: ${{ steps.repo.outputs.image_name }}
           subject-digest: ${{ steps.build-push.outputs.digest }}
