@@ -173,7 +173,7 @@ jobs:
 
       # 14. Generate SLSA Build Provenance Attestation
       - name: Attest Build Provenance
-        uses: actions/attest-build-provenance@v2
+        uses: actions/attest-build-provenance@v4
         with:
           subject-name: ${{ steps.repo.outputs.image_name }}
           subject-digest: ${{ steps.build-push.outputs.digest }}
