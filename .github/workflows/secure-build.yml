@@ -157,7 +157,7 @@ jobs:
 
       # 12. Upload generated SBOM as GitHub Actions build artifact
       - name: Upload SBOM Build Artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: ${{ matrix.service.name }}-sbom
           path: ${{ matrix.service.name }}-sbom.spdx.json
@@ -193,7 +193,7 @@ jobs:
           echo "${{ steps.build-push.outputs.digest }}" > image-digest/${{ matrix.service.name }}-sha256.txt
 
       - name: Upload Image Digest Artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: ${{ matrix.service.name }}-digest
           path: image-digest/

@@ -283,7 +283,7 @@ jobs:
 
       # 15. Upload DAST Security Reports as Artifacts (Always executed to preserve audit trail)
       - name: Upload DAST Security Reports
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         if: always()
         with:
           name: dast-security-reports
