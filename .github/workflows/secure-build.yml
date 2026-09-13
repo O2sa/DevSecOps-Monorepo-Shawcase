@@ -55,7 +55,7 @@ jobs:
     steps:
       # 1. Checkout repository source code
       - name: Checkout Source Code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       # 2. Compute strictly lowercase repository owner & image reference
       - name: Compute Lowercase Image Reference
