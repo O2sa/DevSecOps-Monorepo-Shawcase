@@ -147,7 +147,7 @@ jobs:
 
       # 11. Generate Software Bill of Materials (SBOM) in SPDX JSON format via Syft
       - name: Generate SPDX SBOM
-        uses: anchore/sbom-action@v0.24.0
+        uses: anchore/sbom-action@v0.24.2
         with:
           image: ${{ steps.repo.outputs.image_name }}@${{ steps.build-push.outputs.digest }}
           registry-username: ${{ github.actor }}
